@@ -54,6 +54,21 @@ Node 22 and pnpm 11 (`corepack enable` picks up the pinned version).
 | `config/` | Shared tool configuration; `api-extractor-base.json` is the API gate's |
 | `tools/docs` | TypeDoc, in a package of its own because it needs a TypeScript the build does not use |
 
+**Two TypeScripts, and they do not move together.** The build runs 7; `tools/docs` pins
+6.0.3, because typedoc's peer range stops at `6.0.x` and 6.0.3 is the newest version it
+accepts. Dependabot matches by name and cannot tell the two apart, so majors are ignored
+for `typescript` — which makes the build's own major a manual decision.
+
+Before touching either pin, ask what decides it:
+
+```sh
+npm view typedoc version peerDependencies   # has the range moved?
+```
+
+If typedoc accepts the newer major, raise both and drop the ignore. If it has not, the
+pin stays — and a "typescript is out of date" report is answered by that command rather
+than by bumping.
+
 Where a test goes follows from what it can see. Logic that can be checked without a
 canvas belongs in a package's own suite, because it runs in a second. Anything about what
 is *painted* — geometry, continuity, whether a click lands on the byte that was drawn —
