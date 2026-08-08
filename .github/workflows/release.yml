@@ -202,12 +202,15 @@ jobs:
         run: |
           corepack enable
           corepack prepare pnpm@11.1.3 --activate
+      # Deliberately no `registry-url`. It writes an `.npmrc` containing
+      # `_authToken=${NODE_AUTH_TOKEN}`, and npm treats a configured auth line as "I am
+      # already authenticated" and never asks for an OIDC token — which is how a
+      # workflow with trusted publishing configured ends up publishing with a secret, or
+      # failing with E404 when there is no secret to expand.
       - uses: actions/setup-node@v7
         with:
           node-version: "22"
           cache: pnpm
-          # Writes the .npmrc that NODE_AUTH_TOKEN below fills in.
-          registry-url: "https://registry.npmjs.org"
       # Node 22 ships npm 10.9.8, which has no `stage` command at all. Pinned rather than
       # `@latest` so a release is not the first place a new npm runs.
       - run: npm install -g npm@12.0.2
@@ -229,8 +232,14 @@ jobs:
           printf '%s\n' "$@"
           test "$#" -eq 5
       - name: stage
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        # No credential. `id-token: write` above lets npm exchange a GitHub OIDC token
+        # for a short-lived one, against the trusted publisher configured on each of the
+        # five packages (this repository, this workflow file, no environment). A secret
+        # that does not exist cannot leak, expire, or be used from anywhere else.
+        #
+        # This could not be the first release: a trusted publisher can only be attached
+        # to a package that already exists, so 0.1.0-next.0 went out with a token, which
+        # was then revoked.
         run: |
           # A dispatch has no tag, so `verify` reports no version. Falling back to the
           # manifest keeps the dry run on the same branch the real release takes — the
