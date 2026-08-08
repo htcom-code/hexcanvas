@@ -37,6 +37,23 @@ not part of the gate; run it when you touch one of them and quote the before and
 touch a manifest, `files`, `exports`, or anything about the build's output — the mistakes
 it catches are only visible inside the archive, and a published version cannot be edited.
 
+`pnpm verify:registry` goes one step further: it publishes all five to a throwaway
+registry and installs them the way a consumer would — outside the workspace, resolving
+from the registry rather than from `packages/*`. It answers what reading a tarball
+cannot, which is whether the `exports` map, the rewritten dependency ranges, the
+published `.d.ts` and the import graph actually work once installed. It needs a registry
+listening on port 4873:
+
+```sh
+docker run --rm -p 4873:4873 verdaccio/verdaccio:6   # in another terminal
+pnpm verify:registry
+```
+
+The release workflow runs the same script against the same image before it publishes
+anything. That ordering is deliberate: a version number on npmjs.com can never be
+reused, so a check that runs after publishing can report a problem but cannot prevent
+one.
+
 Node 22 and pnpm 11 (`corepack enable` picks up the pinned version).
 
 ## Where things are
