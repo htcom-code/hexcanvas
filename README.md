@@ -70,10 +70,9 @@ the cursor.*
 npm install @hexcanvas/core @hexcanvas/element   # or pnpm add / yarn add
 ```
 
-> **The current release is a prerelease.** `0.1.0-next.0` is what those commands install:
-> npm gives a brand-new package a `latest` tag whatever `--tag` says, so it is both
-> `latest` and `next`. Treat the API as settling rather than settled — the decoration
-> surface changed shape twice in a single session before this was public, and
+> **0.1.0 is a first release, not a settled API.** The version says so: below 1.0.0 the
+> minor is the breaking position, so `^0.1.0` will not carry you across a change of
+> shape. The decoration surface changed twice in a single session before this was public.
 > [ROADMAP.md](ROADMAP.md) says which parts are deliberately unfinished.
 
 <details open>

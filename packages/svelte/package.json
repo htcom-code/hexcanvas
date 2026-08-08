@@ -1,6 +1,6 @@
 {
   "name": "@hexcanvas/svelte",
-  "version": "0.1.0-next.0",
+  "version": "0.1.0",
   "description": "Svelte action and mount helper for HexCanvas, over the <hexcanvas-editor> custom element.",
   "keywords": [
     "hex",
