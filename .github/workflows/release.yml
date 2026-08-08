@@ -124,8 +124,43 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm test:browser
 
+  # The same publish, first, to a registry that is deleted when this job ends.
+  #
+  # `verify` reads the tarballs; this one installs them. Everything a resolver decides
+  # lives here — whether the `exports` map hands a consumer the right file, whether the
+  # four bindings find `@hexcanvas/core` from the registry rather than from a workspace
+  # link that exists on no other machine, whether the published `.d.ts` survives a
+  # consumer's `moduleResolution`, and whether a bundler can follow the import graph to
+  # the end.
+  #
+  # It has to run before `publish` rather than after. A version number on npmjs.com can
+  # never be reused, so a check that runs afterwards can report but cannot prevent; a
+  # failure here costs nothing because nothing has left the runner.
+  consumer:
+    needs: verify
+    runs-on: ubuntu-latest
+    services:
+      registry:
+        image: verdaccio/verdaccio:6
+        ports: ["4873:4873"]
+    steps:
+      - uses: actions/checkout@v7
+      - name: enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.1.3 --activate
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      # The script waits for the container itself: `services` starts it but does not
+      # wait for it to listen.
+      - run: node scripts/verify-registry.mjs --registry http://localhost:4873
+
   publish:
-    needs: [verify, reference, browser]
+    needs: [verify, reference, browser, consumer]
     runs-on: ubuntu-latest
     permissions:
       # Provenance signs the build against this workflow run. Requested here rather than
