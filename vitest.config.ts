@@ -44,12 +44,13 @@ export default defineConfig({
             provider: playwright(),
             headless: true,
             screenshotFailures: false,
-            // Both engines, because they disagree about things this suite is the
-            // only thing that would notice. The same font string measures 7.83px a
-            // character on chromium and 8.04px on WebKit, and WebKit does not put a
-            // `tabindex` element in the tab order unless Full Keyboard Access is on —
-            // neither is visible to any other test here.
-            instances: [{ browser: "chromium" }, { browser: "webkit" }],
+            // All three engines. There are only three, and each disagreed about
+            // something nothing else here would notice: the same font string measures
+            // 7.83px a character on chromium and 8.04px on WebKit; WebKit does not put
+            // a `tabindex` element in the tab order unless Full Keyboard Access is on;
+            // and Firefox hands back a scroll offset of 10999.65 for the 11000 you
+            // assigned, which used to put the wrong row at the top.
+            instances: [{ browser: "chromium" }, { browser: "webkit" }, { browser: "firefox" }],
           },
         },
       },
