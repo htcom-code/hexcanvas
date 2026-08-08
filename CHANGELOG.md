@@ -9,7 +9,36 @@ version lines would multiply into combinations nobody tests.
 
 ## [Unreleased]
 
-Nothing since 0.1.0-next.0.
+Nothing since 0.1.0.
+
+## [0.1.0] — 2026-08-08
+
+The first stable release. Same code as `0.1.0-next.0`; what changed is how it is
+released and what the version promises.
+
+```sh
+npm install @hexcanvas/core
+```
+
+**`0.1.0` is a first release, not a settled API.** Below 1.0.0 the minor is the breaking
+position — `^0.1.0` resolves to `>=0.1.0 <0.2.0-0` — so a caret range will not carry a
+consumer across a change of shape. That is the intended reading: the decoration surface
+changed twice in a single session before this was public.
+
+### Changed
+
+- **Releases are staged rather than published.** A tag builds the release, proves it
+  installs from a registry, and leaves it in npm's staging area; it becomes installable
+  only when a maintainer approves it, which needs 2FA. A rejected stage frees its version
+  number, so "not yet" costs nothing — the only gate in this repository that survives the
+  irreversible step.
+- **Published through OIDC.** The workflow holds no npm credential. The token used for
+  `0.1.0-next.0` is revoked; a trusted publisher tied to this repository and workflow
+  replaces it.
+- **Provenance is attached.** `0.1.0-next.0` shipped without it: `pnpm publish` never
+  reads the `provenance` setting, so the attestation was silently skipped despite the
+  configuration and a working id-token. Releases are packed with pnpm — which is what
+  rewrites `workspace:*` — and staged with npm, which does have the flag.
 
 ## [0.1.0-next.0] — 2026-08-08
 
@@ -71,5 +100,6 @@ things a consumer would have met and no test could see.
   zero; the rest is down to 132, with the remainder being platform callbacks and button
   labels where a comment would restate the name.
 
-[Unreleased]: https://github.com/htcom-code/hexcanvas/compare/v0.1.0-next.0...main
+[Unreleased]: https://github.com/htcom-code/hexcanvas/compare/v0.1.0...main
+[0.1.0]: https://github.com/htcom-code/hexcanvas/compare/v0.1.0-next.0...v0.1.0
 [0.1.0-next.0]: https://github.com/htcom-code/hexcanvas/releases/tag/v0.1.0-next.0
