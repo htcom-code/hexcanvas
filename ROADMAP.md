@@ -76,7 +76,7 @@ Not declines — things that are known to be partial, so nobody has to discover 
 | | State |
 |---|---|
 | **Screen reader** | The accessibility tree is audited by tests driving real keystrokes. **How it sounds has never been checked with a real screen reader** — verbosity, ordering, and how hex pairs are pronounced are unverified |
-| **Browser coverage** | The browser suite runs chromium only. A WebKit-specific canvas difference would go unnoticed |
+| **Firefox** | The browser suite runs chromium and WebKit. Gecko is untested — its canvas text metrics are a third implementation |
 | **What the grid looks like** | The suite reads pixels back off the canvas, which pins geometry and continuity but not appearance. A change in glyph rendering passes as long as the probes still land |
 | **Find and encodings** | Find encodes a text query as UTF-8. Below 0x80 that agrees with any code page; above it, a text query for a code-page character finds nothing. Hex mode is the exact answer |
 | **In-place save** | `savePatch()` is exact about "is this the document that was written out" and conservative about everything else — a range whose bytes happen to match again stays dirty, because knowing better would mean keeping a copy |

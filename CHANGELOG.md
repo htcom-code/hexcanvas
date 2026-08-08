@@ -38,6 +38,13 @@ consumer would have met and no test could see.
   which ship inside the tarballs and render on the package page — still linked to the
   private repository this was developed in.
 - **`engines` missing.** No manifest declared the Node it is built against.
+- **The browser suite ran one engine.** Adding WebKit found two things chromium
+  could not: a fixture that hard-coded a 640px canvas, which the same font's wider
+  metrics on WebKit overflowed — taking all 25 renderer assertions with it as a
+  skipped precondition rather than a failure — and an exact pixel comparison
+  between the batched and per-byte drawing paths that holds only where the engine
+  rounds the way chromium does. Neither was a defect in the editor, which is the
+  useful part of the answer.
 - **Undocumented public surface.** 312 of 924 members had no doc comment, including the
   props and options that *are* the whole API for a React or Svelte consumer. Those are at
   zero; the rest is down to 132, with the remainder being platform callbacks and button

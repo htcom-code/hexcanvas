@@ -44,7 +44,12 @@ export default defineConfig({
             provider: playwright(),
             headless: true,
             screenshotFailures: false,
-            instances: [{ browser: "chromium" }],
+            // Both engines, because they disagree about things this suite is the
+            // only thing that would notice. The same font string measures 7.83px a
+            // character on chromium and 8.04px on WebKit, and WebKit does not put a
+            // `tabindex` element in the tab order unless Full Keyboard Access is on —
+            // neither is visible to any other test here.
+            instances: [{ browser: "chromium" }, { browser: "webkit" }],
           },
         },
       },

@@ -173,9 +173,43 @@ describe("leaving the editor with the keyboard", () => {
     // the user out of the grid and straight onto an unnamed div still inside
     // it. `document.activeElement` reports the host either way, so the question
     // has to be asked of the shadow root.
-    expect(editor.shadowRoot!.activeElement?.className ?? null).toBeNull();
-    expect(document.activeElement).toBe(after);
+    //
+    // Read before anything else moves focus — including the probe below, which
+    // is why this is captured rather than asserted in place.
+    const landed = document.activeElement;
+    const insideShadow = editor.shadowRoot!.activeElement;
+
+    // That half is the library's, and it holds on any engine.
+    expect(insideShadow?.className ?? null).toBeNull();
+
+    // The other half is the platform's, and the platforms disagree. WebKit only
+    // tabs between links and form controls unless Full Keyboard Access is on, so
+    // a `tabindex="0"` element — which is what a painted grid has to be — does
+    // not hand focus to the next button; it goes to the body. Measured on a bare
+    // div with no library involved, so this asks the engine what it does rather
+    // than assuming, and asserts the editor matches it.
+    if (await tabMovesBetweenTabindexElements()) expect(landed).toBe(after);
+    else expect(insideShadow).toBeNull();
   });
+
+  /**
+   * Whether this engine's sequential focus navigation includes elements that are
+   * focusable only through `tabindex`. Chrome: yes. WebKit: no, by default.
+   */
+  async function tabMovesBetweenTabindexElements(): Promise<boolean> {
+    const probe = document.createElement("div");
+    probe.tabIndex = 0;
+    const next = document.createElement("button");
+    document.body.append(probe, next);
+    try {
+      probe.focus();
+      await userEvent.keyboard("{Tab}");
+      return document.activeElement === next;
+    } finally {
+      probe.remove();
+      next.remove();
+    }
+  }
 
   it("says so, because a way out nobody is told about is not one", async () => {
     const { editor } = await mountEditor();

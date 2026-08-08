@@ -1,6 +1,7 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import {
   HexEngine,
+  createLayout,
   MemoryByteSource,
   PagedByteSource,
   type AddressRadix,
@@ -9,8 +10,23 @@ import {
 } from "@hexcanvas/core";
 import { Painted, black, blue, bytes, canvasFixture, carets, expectNear, green, probeTheme, red } from "./harness";
 
-const viewport = { width: 640, height: 240 };
+/**
+ * Wide enough that the grid fits, on whichever engine is running. 640 was, on
+ * chromium — and only there: the same font string measures 7.83px a character
+ * there and 8.04px on WebKit, which takes a sixteen-byte row from 631.5px to
+ * 646.6px and puts it over the edge. Every coordinate assertion below is
+ * written for a grid that does not scroll sideways, so the precondition failed
+ * and took all of them with it.
+ *
+ * The number is measured rather than guessed for the same reason the layout
+ * measures its font: a hard-coded width is a bet on one engine's metrics.
+ */
+const viewport = { width: Math.ceil(measuredGridWidth() * 1.05), height: 240 };
 const rowHeight = 22;
+
+function measuredGridWidth(): number {
+  return createLayout({ byteLength: 256, bytesPerRow: 16 }).width;
+}
 
 const setup = (options: Partial<HexEngineOptions> = {}, length = 256) => {
   const canvas = canvasFixture(viewport.width, viewport.height);
@@ -318,13 +334,40 @@ describe("drawing a row as one run", () => {
     return canvas.getContext("2d")!.getImageData(from, 0, canvas.width - from, canvas.height).data;
   };
 
-  const differences = (left: Uint8ClampedArray, right: Uint8ClampedArray): number => {
+  /**
+   * Pixels the two paths disagree about by more than antialiasing accounts for.
+   *
+   * Exact equality held on chromium and does not on WebKit, where drawing a row
+   * as one string and drawing it glyph by glyph land the same glyphs in the same
+   * places with slightly different edge coverage: 396 pixels out of 292,560, or
+   * 0.14% — under one pixel per glyph, and none of them more than a shade apart.
+   * A displaced glyph is a different signature entirely, tens of thousands of
+   * pixels at full contrast, which is what this still fails on.
+   *
+   * The threshold is what makes the assertion mean "a reader cannot tell" rather
+   * than "these two engines round the same way".
+   */
+  const differing = (left: Uint8ClampedArray, right: Uint8ClampedArray, tolerance = 48): number => {
     let count = 0;
     for (let at = 0; at < left.length; at += 4) {
-      if (left[at] !== right[at] || left[at + 1] !== right[at + 1] || left[at + 2] !== right[at + 2]) count++;
+      const delta = Math.max(
+        Math.abs(left[at]! - right[at]!),
+        Math.abs(left[at + 1]! - right[at + 1]!),
+        Math.abs(left[at + 2]! - right[at + 2]!),
+      );
+      if (delta > tolerance) count++;
     }
-    return count;
+    return count / (left.length / 4);
   };
+
+  /**
+   * What a displaced glyph would cost. Measured: chromium is 0, WebKit is
+   * 0.04% — 127 pixels of 292,560, thinning from left to right in a way that
+   * says the two paths accumulate fractional advances slightly differently
+   * rather than putting a glyph anywhere else. A glyph actually moved would be
+   * two orders of magnitude past this, at full contrast.
+   */
+  const displaced = 0.001;
 
   /** A range that recolours the glyphs to the colour they already are. */
   const forcePerByte = { start: 0, end: 256, textColor: probeTheme.foreground, opacity: 0 };
@@ -336,7 +379,7 @@ describe("drawing a row as one run", () => {
     perByte.engine.setDecorations([forcePerByte], "force-per-byte");
     perByte.engine.render(perByte.canvas);
     const from = batched.engine.layout.hexStart;
-    expect(differences(glyphs(batched.canvas, from), glyphs(perByte.canvas, from))).toBe(0);
+    expect(differing(glyphs(batched.canvas, from), glyphs(perByte.canvas, from))).toBeLessThan(displaced);
   });
 
   it("paints what the per-byte loop paints for a row that has not arrived", () => {
@@ -352,7 +395,7 @@ describe("drawing a row as one run", () => {
     batched.engine.render(batched.canvas);
     perByte.engine.render(perByte.canvas);
     const from = batched.engine.layout.hexStart;
-    expect(differences(glyphs(batched.canvas, from), glyphs(perByte.canvas, from))).toBe(0);
+    expect(differing(glyphs(batched.canvas, from), glyphs(perByte.canvas, from))).toBeLessThan(displaced);
   });
 });
 
