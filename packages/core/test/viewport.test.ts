@@ -10,6 +10,20 @@ describe("getVisibleRows", () => {
     expect(rows(23).first).toBe(1);
   });
 
+  it("treats a scroll that lands just short of a boundary as being on it", () => {
+    // Firefox does not hand back the offset you assigned: 500 * 22 comes out as
+    // 10999.650390625, which floored to 499 and put the wrong line at the top.
+    expect(rows(500 * 22 - 0.349609375).first).toBe(500);
+    expect(rows(22 - 0.4).first).toBe(1);
+  });
+
+  it("does not swallow a row that is genuinely still on screen", () => {
+    // The other side of the same tolerance: 21px of a 22px row scrolled away
+    // leaves a pixel of row 0 showing, and it has to be painted.
+    expect(rows(21).first).toBe(0);
+    expect(rows(22 - 0.6).first).toBe(0);
+  });
+
   it("covers a partly visible row at each edge", () => {
     // 100px of viewport spans four whole rows plus a sliver of a fifth.
     const window = rows(11);

@@ -467,18 +467,23 @@ pnpm install
 pnpm dev           # playground: React at /, custom element at /element.html, bindings at /frameworks.html
 pnpm check         # build, type-check every package and its tests, run the core suite
 pnpm test          # the core suite alone
-pnpm test:browser  # renderer and bindings in headless chromium
+pnpm test:browser  # renderer and bindings in chromium, WebKit and Firefox
 pnpm bench         # the two structures where cost, not correctness, is the risk
 ```
 
 Two suites, because a canvas needs a browser. `pnpm test` covers `@hexcanvas/core` with no
 DOM. What it cannot cover is what is *painted* — whether the caret lands on the byte the
 hit-test returns, whether a selection reads as one band. `pnpm test:browser` drives a real
-chromium and **reads pixels back off the canvas**: the caret is located by scanning for its
+browser and **reads pixels back off the canvas**: the caret is located by scanning for its
 colour, and its painted centre is fed to `hitTest`, so a drift between drawing and clicking
 fails the suite. One shared list of expectations runs against all four bindings.
 
-Install the browser once with `npx playwright install chromium`.
+Install the browsers once with `npx playwright install chromium webkit firefox`.
+
+All three engines, because there are only three and each disagreed about something
+nothing else would catch: the same font string measures 7.83px a character on
+chromium and 8.04px on WebKit — enough to take a sixteen-byte row from fitting to
+not — and Firefox hands back a scroll offset of 10999.65 for the 11000 you assigned.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request, and
 [ROADMAP.md](ROADMAP.md) for what this library has decided not to do — a declined

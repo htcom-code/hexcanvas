@@ -62,9 +62,24 @@ export function getVisibleRows(byteLength: number, options: ViewportOptions): Vi
   return rowsIn(Math.ceil(byteLength / options.bytesPerRow), options);
 }
 
+/**
+ * A scroll position landing this far short of a row boundary counts as being on
+ * it. Browsers do not store the number you assigned: Firefox keeps scroll offsets
+ * in app units and hands 11000 back as 10999.650390625, which floors to the row
+ * above and puts the wrong line at the top. Chromium and WebKit return it intact,
+ * so this is the difference between "scrolled to row 500" meaning the same thing
+ * on three engines and meaning it on two.
+ *
+ * Half a pixel rather than a whole one. The error measured is 0.35px, and the
+ * tolerance is also what gets skipped: at a whole pixel, a genuine scroll of 21px
+ * with 22px rows would report row 1 as first and leave row 0's last pixel unpainted.
+ * Half covers the quantisation with room and cannot swallow a row's edge.
+ */
+const rowBoundaryTolerance = 0.5;
+
 /** The same, for a plan whose row count is not the byte length over a width. */
 export function rowsIn(total: number, options: Pick<ViewportOptions, "rowHeight" | "height" | "scrollTop">): VisibleRows {
-  const first = Math.max(0, Math.floor(options.scrollTop / options.rowHeight));
+  const first = Math.max(0, Math.floor((options.scrollTop + rowBoundaryTolerance) / options.rowHeight));
   const visible = Math.ceil(options.height / options.rowHeight) + 1;
   return { first: Math.min(first, Math.max(0, total - 1)), last: Math.min(total, first + visible), total };
 }

@@ -38,6 +38,19 @@ consumer would have met and no test could see.
   which ship inside the tarballs and render on the package page — still linked to the
   private repository this was developed in.
 - **`engines` missing.** No manifest declared the Node it is built against.
+- **The browser suite ran one engine.** Adding WebKit found two things chromium
+  could not: a fixture that hard-coded a 640px canvas, which the same font's wider
+  metrics on WebKit overflowed — taking all 25 renderer assertions with it as a
+  skipped precondition rather than a failure — and an exact pixel comparison
+  between the batched and per-byte drawing paths that holds only where the engine
+  rounds the way chromium does. Neither was a defect in the editor, which is the
+  useful part of the answer.
+- **A scroll to a row boundary did not land on it in Firefox.** Gecko does not hand
+  back the offset you assigned — 11000 comes out as 10999.650390625 — which floored
+  to the row above and put the wrong line at the top of the viewport. A host asking
+  for `row * rowHeight` got row 499 when it asked for 500. Rows now tolerate half a
+  pixel at the boundary; the bound is pinned from both sides, because a larger one
+  would stop painting a row that is genuinely still on screen.
 - **Undocumented public surface.** 312 of 924 members had no doc comment, including the
   props and options that *are* the whole API for a React or Svelte consumer. Those are at
   zero; the rest is down to 132, with the remainder being platform callbacks and button

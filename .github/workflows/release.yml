@@ -112,6 +112,9 @@ jobs:
       image: mcr.microsoft.com/playwright:v1.62.1-noble
     env:
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+      # See the same line in ci.yml: Firefox will not start as root while $HOME
+      # belongs to pwuser, which is what a container job gets by default.
+      HOME: /root
     steps:
       - uses: actions/checkout@v7
       - name: enable pnpm
