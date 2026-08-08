@@ -46,6 +46,24 @@ updates:
         update-types:
           - minor
           - patch
+    ignore:
+      # Two TypeScripts live here and they are not free to move together. The build
+      # runs 7; `tools/docs` pins 6.0.3 because typedoc's peer range stops at 6.0.x,
+      # and 6.0.3 is the newest version that range allows. Dependabot matches by
+      # dependency name and cannot tell the two apart, so it proposed 6.0.3 → 7.0.2
+      # for the docs package the day this repository went public — an upgrade that
+      # would leave typedoc unable to load.
+      #
+      # Majors are blocked here as a result, which also means the build's own
+      # TypeScript major is a deliberate, manual bump. The question to answer first
+      # is always the same: has typedoc's peer range moved?
+      #
+      #   npm view typedoc version peerDependencies
+      #
+      # If it accepts the new major, raise both together. If it does not, the pin
+      # stays and this rule is why. Minors and patches are unaffected.
+      - dependency-name: typescript
+        update-types: ["version-update:semver-major"]
 
   # One PR for all action bumps — they are independent of each other and of the npm
   # tree. Pinned at the current majors here, so the first weekly run should be quiet.
