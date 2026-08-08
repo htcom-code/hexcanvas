@@ -99,6 +99,13 @@ jobs:
       image: mcr.microsoft.com/playwright:v1.62.1-noble
     env:
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+      # Firefox refuses to start as root when $HOME belongs to someone else, and a
+      # container job is root while GitHub sets HOME to /github/home, which this
+      # image owns as pwuser: "Running Nightly as root in a regular user's session
+      # is not supported." Chromium and WebKit do not care, so this only appeared
+      # when Gecko joined the suite. Reproduced in the image both ways before it
+      # was written here.
+      HOME: /root
     steps:
       - uses: actions/checkout@v7
       - name: enable pnpm
