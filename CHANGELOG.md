@@ -13,18 +13,22 @@ Nothing since 0.1.0-next.0.
 
 ## [0.1.0-next.0] — 2026-08-08
 
-The first release. It carries the **`next` dist-tag and nothing carries `latest`**, so
-installing it means asking for it by name:
+The first release, and a prerelease:
 
 ```sh
-npm install @hexcanvas/core@next
+npm install @hexcanvas/core
 ```
 
-`npm install @hexcanvas/core` is an error rather than an older version, which is the
-intended shape: the decoration API changed twice in a single session before this was
-public, and pinning `latest` now would make the next change a breaking one for anyone who
-typed the short command. A caret range does not reach this version either — npm excludes
-prereleases from ranges — so nobody receives it without asking.
+It was published with `--tag next` so that `latest` would keep pointing at a stable
+version — the decoration API changed shape twice in a single session before this was
+public, and a `latest` that means "prerelease" is a trap for anyone who types the short
+command. **That is not what happened.** npm gives a brand-new package a `latest` tag
+whatever `--tag` says, because a package is not allowed to have none, so this version is
+both `latest` and `next`. The flag only controls the tag on releases after the first.
+
+The practical difference is small — there is no stable version to be preferred over —
+but it is the opposite of what was intended, and the documentation said the opposite
+until this was measured on the registry.
 
 What exists is described in [README.md](README.md), down to the costs that are known and
 accepted; what will not exist is in [ROADMAP.md](ROADMAP.md).

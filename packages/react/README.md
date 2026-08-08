@@ -8,7 +8,7 @@ element that maps props to attributes and events to callbacks; it holds no edito
 chrome of its own, so a React release cannot drift from the Vue or Svelte one.
 
 ```sh
-npm install @hexcanvas/react@next @hexcanvas/core@next
+npm install @hexcanvas/react @hexcanvas/core
 ```
 
 React 18 or 19 (`react` and `react-dom` are peer dependencies).

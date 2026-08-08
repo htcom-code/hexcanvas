@@ -191,10 +191,17 @@ jobs:
           # `--no-git-checks`: a tag build is a detached HEAD, and pnpm otherwise
           # refuses to publish from anything that is not the publish branch.
           #
-          # `--tag next`: the first releases are deliberately not `latest`. The
-          # decoration API changed twice in a single session before this repository was
-          # public; pinning `latest` now would make the next change a breaking one for
-          # anyone who typed `npm install @hexcanvas/core`.
+          # `--tag next`: prereleases should not become what `npm install @hexcanvas/core`
+          # resolves to. The decoration API changed shape twice in a single session before
+          # this repository was public.
+          #
+          # It does not do that on a package's *first* publish. 0.1.0-next.0 came out as
+          # both `next` and `latest`, because npm will not leave a new package without a
+          # `latest` and sets it whatever this flag says. Measured on the registry after
+          # publishing, not read in a document — the documentation claimed the opposite
+          # until then. The flag governs every release after the first, which is the case
+          # that matters: once a stable version holds `latest`, a prerelease published
+          # this way leaves it alone.
           #
           # pnpm, never npm: `workspace:*` is rewritten as pnpm packs. Published through
           # npm the four bindings would carry a range no registry can resolve.
