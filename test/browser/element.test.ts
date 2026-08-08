@@ -312,27 +312,44 @@ describe("when the canvas is painted", () => {
     };
 
     /**
-     * Both rates measured in the same run, and compared against each other.
+     * The bound comes from the setting, not from the machine.
      *
-     * An absolute count would be measuring the machine: how many frames fit in
-     * 400ms is the runner's business, not this code's. The claim worth pinning
-     * is the ratio — capping at ten a second paints far less than following the
-     * display, whatever the display happens to be.
+     * `paint()` holds a frame whenever `now - painted < 1000 / fps`, so two paints
+     * are at least that far apart and a window of `ms` fits at most
+     * `floor(ms / interval) + 1` of them. A slow runner paints fewer, which still
+     * satisfies the bound — that is the point of stating it this way.
+     *
+     * An earlier version compared the capped run against an uncapped one and
+     * required half as many paints. That measures the runner: it failed on WebKit
+     * in CI with free=8, held=4 — the cap working exactly as specified, and the
+     * ratio collapsing because the uncapped run had itself been throttled to
+     * around 20fps by a loaded machine.
      */
-    it("paints far less often when a rate is asked for", async () => {
+    it("paints no more often than the rate it was given", async () => {
+      const ms = 400;
+      const fps = 10;
+      const permitted = Math.floor(ms / (1000 / fps)) + 1;
+
       const uncapped = await mount({ length: 64 * 1024 });
       const free = counting(uncapped.engine);
-      await scrollFor(uncapped.engine, 400);
+      await scrollFor(uncapped.engine, ms);
 
-      const capped = await mount({ length: 64 * 1024, attributes: { "max-fps": "10" } });
-      expect(capped.element.maxFps).toBe(10);
+      const capped = await mount({ length: 64 * 1024, attributes: { "max-fps": String(fps) } });
+      expect(capped.element.maxFps).toBe(fps);
       const held = counting(capped.engine);
-      await scrollFor(capped.engine, 400);
+      await scrollFor(capped.engine, ms);
 
-      expect(free.paints, "the uncapped editor painted nothing; the driver is broken")
-        .toBeGreaterThan(4);
-      expect(held.paints, "the cap painted as often as no cap")
-        .toBeLessThan(free.paints / 2);
+      expect(held.paints, "painted more often than the rate allows")
+        .toBeLessThanOrEqual(permitted);
+      expect(held.paints, "the cap painted nothing at all")
+        .toBeGreaterThan(0);
+
+      // Only evidence when the uncapped run actually outran the cap. Where it did
+      // not, it says nothing either way, and asserting on it would be measuring
+      // the runner again.
+      if (free.paints > permitted) {
+        expect(held.paints, "capping did not reduce painting").toBeLessThan(free.paints);
+      }
     });
 
     it("still lands the final state after the last change", async () => {
