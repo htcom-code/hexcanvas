@@ -8,7 +8,7 @@ second implementation: the editor chrome exists once, so a Vue release cannot dr
 React or Svelte one.
 
 ```sh
-npm install @hexcanvas/vue@next @hexcanvas/core@next
+npm install @hexcanvas/vue @hexcanvas/core
 ```
 
 Vue 3.4 or later (`vue` is a peer dependency).
