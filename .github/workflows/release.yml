@@ -139,10 +139,10 @@ jobs:
   consumer:
     needs: verify
     runs-on: ubuntu-latest
-    services:
-      registry:
-        image: verdaccio/verdaccio:6
-        ports: ["4873:4873"]
+    # Not a `services:` container. That starts before the checkout, so there is no way to
+    # give it `config/verdaccio.yaml` — and the stock configuration proxies npmjs, which
+    # made this job answer questions about the released copies instead of the build in
+    # hand once the first version was out. `docker run` after the checkout can mount it.
     steps:
       - uses: actions/checkout@v7
       - name: enable pnpm
@@ -155,9 +155,17 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
-      # The script waits for the container itself: `services` starts it but does not
-      # wait for it to listen.
+      - name: start the throwaway registry
+        run: |
+          docker run -d --name registry -p 4873:4873 \
+            -v "$PWD/config/verdaccio.yaml:/verdaccio/conf/config.yaml:ro" \
+            verdaccio/verdaccio:6
+      # The script waits for it to listen, and refuses to run if these packages are
+      # already there — which is what a returning uplink would look like.
       - run: node scripts/verify-registry.mjs --registry http://localhost:4873
+      - name: registry log on failure
+        if: failure()
+        run: docker logs registry
 
   publish:
     needs: [verify, reference, browser, consumer]

@@ -45,7 +45,9 @@ published `.d.ts` and the import graph actually work once installed. It needs a 
 listening on port 4873:
 
 ```sh
-docker run --rm -p 4873:4873 verdaccio/verdaccio:6   # in another terminal
+# in another terminal — the config is not optional, see config/verdaccio.yaml
+docker run --rm -p 4873:4873 \
+  -v "$PWD/config/verdaccio.yaml:/verdaccio/conf/config.yaml:ro" verdaccio/verdaccio:6
 pnpm verify:registry
 ```
 
