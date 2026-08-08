@@ -1,0 +1,37 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": [
+    "../../packages/core/src/index.ts",
+    "../../packages/element/src/index.ts",
+    "../../packages/react/src/index.ts",
+    "../../packages/vue/src/index.ts",
+    "../../packages/svelte/src/index.ts"
+  ],
+  "tsconfig": "./tsconfig.docs.json",
+  "json": "../../api/api.json",
+  "out": "../../api/html",
+  "name": "HexCanvas",
+  "readme": "none",
+  "excludePrivate": true,
+  "excludeInternal": true,
+  "validation": {
+    "notExported": true,
+    "invalidLink": true,
+    "notDocumented": false
+  },
+  "treatWarningsAsErrors": true,
+  "highlightLanguages": [
+    "ts",
+    "tsx",
+    "js",
+    "jsx",
+    "json",
+    "html",
+    "css",
+    "svelte",
+    "vue",
+    "bash",
+    "sh",
+    "text"
+  ]
+}

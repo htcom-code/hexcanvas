@@ -1,0 +1,60 @@
+version: 2
+updates:
+  # Ungrouped, one PR per package saturates `open-pull-requests-limit` and the queued
+  # updates then never open at all — a sibling repository had react offered without
+  # react-dom that way. Groups keep the packages that pin each other in one PR.
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      # react and react-dom pin each other through peer ranges, and the @types packages
+      # track the same runtime version. Majors group here too.
+      react:
+        patterns:
+          - react
+          - react-dom
+          - "@types/react"
+          - "@types/react-dom"
+      # vitest, its browser provider and playwright ship as a matched set: the browser
+      # suite pins a playwright image by version, so these moving apart breaks CI rather
+      # than a test.
+      #
+      # A playwright bump in here is never complete on its own. The browser job runs
+      # inside mcr.microsoft.com/playwright, whose tag is written in ci.yml and
+      # release.yml, and Dependabot cannot see either — the client would end up asking
+      # the image for a browser build it does not carry. Move both tags with the PR.
+      vitest:
+        patterns:
+          - vitest
+          - "@vitest/*"
+          - playwright
+      # vite and the react plugin are one upgrade rather than two: @vitejs/plugin-react@6
+      # declares `vite: ^8` as a peer, so either version bumped alone leaves the
+      # playground with a plugin that does not match its bundler. They arrived as two
+      # separate proposals, which is what this group is for. Majors included — that is
+      # the case it exists for.
+      vite:
+        patterns:
+          - vite
+          - "@vitejs/*"
+      dev:
+        dependency-type: development
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
+
+  # One PR for all action bumps — they are independent of each other and of the npm
+  # tree. Pinned at the current majors here, so the first weekly run should be quiet.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      github-actions:
+        patterns:
+          - "*"

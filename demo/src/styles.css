@@ -1,0 +1,361 @@
+/*
+ * Every theme sets variables and nothing else. Two families:
+ *
+ * `--hexcanvas-*` are the library's — they cross the shadow boundary and are read
+ * back by the engine, so one declaration colours the painted grid and the panel.
+ * `--ui-*` are this page's chrome. Keeping the chrome on variables too is what
+ * stops each new template needing its own copy of every rule below.
+ *
+ * `color-scheme` is the third thing each template has to say, and the only one
+ * that is not a variable. The grid scrolls inside an element the library owns,
+ * and its scrollbar is painted by the browser rather than by any of these — so
+ * without this a dark template gets whatever scrollbar the operating system
+ * feels like, including on hover. It inherits through the shadow boundary, so
+ * declaring it here reaches the scroller inside the editor.
+ */
+:root,
+[data-theme="dark"] {
+  --ui-bg: #090e19;
+  --ui-fg: #e5e7eb;
+  --ui-strong: #f9fafb;
+  --ui-muted: #9ca3af;
+  --ui-surface: #111827;
+  --ui-raised: #1f2937;
+  --ui-border: #374151;
+  --ui-hairline: #1f2937;
+
+  color-scheme: dark;
+  --hexcanvas-bg: #111827;
+  --hexcanvas-fg: #e5e7eb;
+  --hexcanvas-muted: #7c8799;
+  --hexcanvas-selection: #264f78;
+  --hexcanvas-caret: #f8fafc;
+  --hexcanvas-cursor-row: #1f2937;
+  --hexcanvas-cursor-byte: #e5e7eb;
+  --hexcanvas-cursor-byte-text: #111827;
+  --hexcanvas-decoration: #b45309;
+  --hexcanvas-decoration-label: #fbbf24;
+  --hexcanvas-search: #0e7490;
+  --hexcanvas-diff-replace: #a16207;
+  --hexcanvas-diff-insert: #15803d;
+  --hexcanvas-diff-delete: #b91c1c;
+  --hexcanvas-panel-bg: #1f2937;
+  --hexcanvas-panel-fg: #d1d5db;
+  --hexcanvas-panel-shadow: 0 6px 20px #0008;
+  --hexcanvas-field-bg: #111827;
+  --hexcanvas-border: #4b5563;
+  --hexcanvas-danger: #fca5a5;
+}
+
+[data-theme="light"] {
+  --ui-bg: #f6f7f9;
+  --ui-fg: #1f2933;
+  --ui-strong: #16202c;
+  --ui-muted: #52606d;
+  --ui-surface: #ffffff;
+  --ui-raised: #ffffff;
+  --ui-border: #c7ced6;
+  --ui-hairline: #e4e7eb;
+
+  color-scheme: light;
+  --hexcanvas-bg: #ffffff;
+  --hexcanvas-fg: #16202c;
+  --hexcanvas-muted: #7b8794;
+  --hexcanvas-selection: #bcd9ff;
+  --hexcanvas-caret: #0b1520;
+  --hexcanvas-cursor-row: #eef1f5;
+  --hexcanvas-cursor-byte: #16202c;
+  --hexcanvas-cursor-byte-text: #ffffff;
+  --hexcanvas-decoration: #b45309;
+  --hexcanvas-decoration-label: #92400e;
+  --hexcanvas-search: #0e7490;
+  --hexcanvas-diff-replace: #b45309;
+  --hexcanvas-diff-insert: #15803d;
+  --hexcanvas-diff-delete: #dc2626;
+  --hexcanvas-panel-bg: #ffffff;
+  --hexcanvas-panel-fg: #1f2933;
+  --hexcanvas-panel-shadow: 0 6px 20px #0002;
+  --hexcanvas-field-bg: #f6f7f9;
+  --hexcanvas-border: #c7ced6;
+  --hexcanvas-danger: #b91c1c;
+}
+
+/* Cool and low-glare: one hue family, so a decorated region reads as structure
+   rather than as a warning. */
+[data-theme="midnight"] {
+  --ui-bg: #060a15;
+  --ui-fg: #d7def5;
+  --ui-strong: #eef2ff;
+  --ui-muted: #7b88a8;
+  --ui-surface: #101830;
+  --ui-raised: #18224a;
+  --ui-border: #2a3563;
+  --ui-hairline: #1a2340;
+
+  color-scheme: dark;
+  --hexcanvas-bg: #0b1020;
+  --hexcanvas-fg: #d7def5;
+  --hexcanvas-muted: #6b7a9e;
+  --hexcanvas-selection: #2b3a72;
+  --hexcanvas-caret: #a5b4fc;
+  --hexcanvas-cursor-row: #151c33;
+  --hexcanvas-cursor-byte: #a5b4fc;
+  --hexcanvas-cursor-byte-text: #0b1020;
+  --hexcanvas-decoration: #7c3aed;
+  --hexcanvas-decoration-label: #c4b5fd;
+  --hexcanvas-search: #0891b2;
+  --hexcanvas-diff-replace: #a16207;
+  --hexcanvas-diff-insert: #15803d;
+  --hexcanvas-diff-delete: #be123c;
+  --hexcanvas-panel-bg: #101830;
+  --hexcanvas-panel-fg: #d7def5;
+  --hexcanvas-panel-shadow: 0 6px 20px #0009;
+  --hexcanvas-field-bg: #0b1020;
+  --hexcanvas-border: #2a3563;
+  --hexcanvas-danger: #fca5a5;
+}
+
+/* Warm paper. A light theme that is not white: long reading sessions over a hex
+   dump are what this one is for. */
+[data-theme="sepia"] {
+  --ui-bg: #efe7d6;
+  --ui-fg: #3b332a;
+  --ui-strong: #2b241c;
+  --ui-muted: #7a6f5d;
+  --ui-surface: #fffdf7;
+  --ui-raised: #f7f1e2;
+  --ui-border: #d6cbb2;
+  --ui-hairline: #e6dcc6;
+
+  color-scheme: light;
+  --hexcanvas-bg: #f7f2e7;
+  --hexcanvas-fg: #3b332a;
+  --hexcanvas-muted: #8a7f6d;
+  --hexcanvas-selection: #e6d5ab;
+  --hexcanvas-caret: #2b241c;
+  --hexcanvas-cursor-row: #efe7d6;
+  --hexcanvas-cursor-byte: #3b332a;
+  --hexcanvas-cursor-byte-text: #f7f2e7;
+  --hexcanvas-decoration: #a9601a;
+  --hexcanvas-decoration-label: #7c4a12;
+  --hexcanvas-search: #2f6f6a;
+  --hexcanvas-diff-replace: #a16207;
+  --hexcanvas-diff-insert: #3f6212;
+  --hexcanvas-diff-delete: #b91c1c;
+  --hexcanvas-panel-bg: #fffdf7;
+  --hexcanvas-panel-fg: #3b332a;
+  --hexcanvas-panel-shadow: 0 6px 20px #0002;
+  --hexcanvas-field-bg: #f7f2e7;
+  --hexcanvas-border: #d6cbb2;
+  --hexcanvas-danger: #a12222;
+}
+
+/* Maximum separation rather than taste: pure black, saturated marks, a caret
+   that cannot be mistaken for a selection. */
+[data-theme="contrast"] {
+  --ui-bg: #000000;
+  --ui-fg: #ffffff;
+  --ui-strong: #ffffff;
+  --ui-muted: #c8c8c8;
+  --ui-surface: #0d0d0d;
+  --ui-raised: #1f1f1f;
+  --ui-border: #7a7a7a;
+  --ui-hairline: #333333;
+
+  color-scheme: dark;
+  --hexcanvas-bg: #000000;
+  --hexcanvas-fg: #ffffff;
+  --hexcanvas-muted: #b0b0b0;
+  --hexcanvas-selection: #0044cc;
+  --hexcanvas-caret: #ffff00;
+  --hexcanvas-cursor-row: #1a1a1a;
+  --hexcanvas-cursor-byte: #ffff00;
+  --hexcanvas-cursor-byte-text: #000000;
+  --hexcanvas-decoration: #ff6600;
+  --hexcanvas-decoration-label: #ffcc00;
+  --hexcanvas-search: #00cccc;
+  --hexcanvas-diff-replace: #ffcc00;
+  --hexcanvas-diff-insert: #00cc66;
+  --hexcanvas-diff-delete: #ff5555;
+  --hexcanvas-panel-bg: #0d0d0d;
+  --hexcanvas-panel-fg: #ffffff;
+  --hexcanvas-panel-shadow: 0 6px 20px #000;
+  --hexcanvas-field-bg: #000000;
+  --hexcanvas-border: #8a8a8a;
+  --hexcanvas-danger: #ff6b6b;
+}
+
+:root { font-family: Inter, ui-sans-serif, system-ui, sans-serif; color: var(--ui-fg); background: var(--ui-bg); }
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 720px; }
+main {
+  height: 100vh; --hexcanvas-height: 100%;
+  display: grid; grid-template-rows: auto auto 1fr auto; padding: 24px; gap: 16px;
+  /* The theme is set on `main`, so the page behind it has to be told too. */
+  color: var(--ui-fg); background: var(--ui-bg);
+}
+/* A layer is in the top layer, so it takes no grid row. */
+main > dialog { grid-row: auto; }
+/* Wraps: there are more controls than fit one line on a laptop, and a row that
+   overflows puts the last of them off screen. */
+nav { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; font-size: 13px; color: var(--ui-muted); }
+nav label { display: flex; gap: 6px; align-items: center; white-space: nowrap; }
+nav input[type="file"] { max-width: 15rem; font-size: 12px; color: inherit; }
+/* One rule per control for the whole page, layers included. The editor's own
+   controls live in a shadow root and take the `--hexcanvas-*` half instead. */
+select { color: var(--ui-fg); background: var(--ui-surface); border: 1px solid var(--ui-border); border-radius: 4px; padding: 3px 6px; font: inherit; }
+button { color: var(--ui-fg); background: var(--ui-raised); border: 1px solid var(--ui-border); border-radius: 4px; padding: 3px 10px; font: inherit; cursor: pointer; }
+header { display: flex; gap: 16px; align-items: baseline; }
+header h1, header span { font-size: 20px; font-weight: 700; margin: 0; }
+header small, footer { color: var(--ui-muted); }
+/* Reachable by a screen reader, invisible to everyone else. The status bar is a
+   line of numbers whose meaning is carried by their position, which is a fact
+   about the layout and not about the text. */
+.sr-only {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0;
+}
+footer { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; font-size: 13px; }
+footer > * { white-space: nowrap; }
+footer span:first-child { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--ui-strong); }
+footer span:last-child { margin-left: auto; }
+footer select { padding: 3px 10px; }
+
+/* The element sizes itself from `--hexcanvas-height`, which `main` already sets
+   to 100%; this is only the grid cell it fills. */
+.compare-host { min-height: 0; display: flex; }
+.compare-host > * { flex: 1 1 auto; min-width: 0; }
+
+/* --- layers --------------------------------------------------------------- */
+
+.layer {
+  color: var(--ui-fg);
+  background: var(--ui-surface);
+  border: 1px solid var(--ui-border);
+  border-radius: 10px;
+  padding: 0;
+  width: min(52rem, 92vw);
+  height: min(34rem, 86vh);
+  /* Bounds for the drag handle in the corner, not the size it opens at. */
+  min-width: 18rem; min-height: 7rem; max-width: 96vw; max-height: 92vh;
+  /* A dialog is centred by its own margin: auto, which `padding: 0` above would
+     otherwise leave to the UA stylesheet to decide. */
+  margin: auto;
+  overflow: hidden;
+  /* Needs an overflow other than visible to get a handle at all. */
+  resize: both;
+  box-shadow: 0 20px 60px #0009;
+}
+/* The header is fixed and the body takes the rest, so dragging the corner
+   resizes what is scrollable rather than clipping it. Only while open: an
+   author `display` beats the UA's `dialog:not([open]) { display: none }` at any
+   specificity, so putting it on `.layer` shows every closed layer on load. */
+.layer[open] { display: flex; flex-direction: column; }
+.layer::backdrop { background: #0006; backdrop-filter: blur(2px); }
+.layer header {
+  flex: none;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px; border-bottom: 1px solid var(--ui-border);
+  /* The drag handle. Selecting the title while moving the layer is never wanted. */
+  cursor: move; user-select: none; touch-action: none;
+}
+.layer h2 { margin: 0; font-size: 16px; }
+.layer header button { font-size: 16px; line-height: 1; padding: 2px 8px; }
+.layer section { padding: 16px 18px; border-bottom: 1px solid var(--ui-hairline); border-right: 1px solid var(--ui-hairline); }
+.layer h3 { margin: 0 0 12px; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ui-muted); }
+.layer label { display: flex; gap: 8px; align-items: center; font-size: 13px; margin-bottom: 8px; }
+.layer label select { margin-left: auto; }
+.layer p { margin: 10px 0 0; font-size: 12px; line-height: 1.5; color: var(--ui-muted); }
+.layer code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+.settings .body {
+  /* Two columns where there is room; the sections are short and independent, so a
+     single column wastes most of the width the layer took. */
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
+  gap: 0;
+  /* `min-height: 0` is what lets a flex child actually scroll rather than grow. */
+  flex: 1 1 auto; min-height: 0; overflow: auto;
+}
+.settings section.wide { grid-column: 1 / -1; }
+.settings section.wide label { max-width: 19rem; }
+/* Two-up where the span gives room for it. */
+.settings section dl { margin: 10px 0 0; }
+.settings dl { margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 4px 24px; }
+.settings dl > div { display: flex; align-items: baseline; gap: 8px; font-size: 13px; }
+.settings dt { color: inherit; }
+.settings dd {
+  margin: 0 0 0 auto; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px; color: var(--ui-muted); white-space: nowrap;
+}
+/* Swatches of the palette a template installs, so the choice is visible before
+   the layer is closed. */
+.settings .palette { display: flex; gap: 4px; margin: 10px 0 0; }
+.settings .palette span {
+  flex: 1; height: 20px; border-radius: 3px; border: 1px solid var(--ui-hairline);
+}
+
+/* The list layers are narrower than the settings grid and scroll as one column. */
+.bookmarks, .structure { width: min(30rem, 92vw); height: min(28rem, 86vh); }
+.bookmarks .body, .structure .body { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 8px 0; }
+.bookmarks .empty, .structure .empty { margin: 8px 18px 12px; }
+.bookmarks kbd, .structure kbd {
+  font: inherit; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  border: 1px solid currentColor; border-radius: 3px; padding: 0 4px; opacity: 0.8;
+}
+.bookmarks ol, .structure ol { list-style: none; margin: 0; padding: 0; }
+.bookmarks li, .structure li { display: flex; align-items: center; gap: 4px; padding: 0 12px 0 6px; border-bottom: 1px solid var(--ui-hairline); }
+.bookmarks li:last-child, .structure li:last-child { border-bottom: 0; }
+/* The whole row is the jump target; a link-sized hit area in a list is a miss. */
+.bookmarks .goto, .structure .goto {
+  flex: 1; display: flex; align-items: baseline; gap: 12px;
+  background: transparent; border: 0; border-radius: 6px;
+  padding: 9px 10px; text-align: left; font: inherit;
+}
+.bookmarks .goto:hover, .structure .goto:hover { background: var(--ui-raised); }
+.bookmarks .address { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.bookmarks .byte { margin-left: auto; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; color: var(--ui-muted); }
+.bookmarks li > button:last-child { border: 0; background: transparent; padding: 4px 6px; opacity: 0.6; }
+.bookmarks li > button:last-child:hover { opacity: 1; }
+
+/* Structure rows carry a colour chip and a range rather than one address. */
+.structure { width: min(34rem, 92vw); }
+.structure .swatch { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+.structure .field { font-weight: 600; }
+.structure .range {
+  margin-left: auto; display: flex; gap: 10px; align-items: baseline;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; color: var(--ui-muted);
+}
+.structure .size { min-width: 3.5em; text-align: right; opacity: 0.8; }
+.structure .empty code { font-size: 11px; }
+
+/* --- the demo's own find panel (search="custom") --------------------------- */
+
+/* A layer like the rest; only its body needs anything of its own. */
+.find { width: min(28rem, 92vw); height: min(30rem, 86vh); }
+.find .body { flex: 1 1 auto; min-height: 0; overflow: auto; padding: 10px 12px 12px; }
+.finder { display: flex; flex-direction: column; gap: 8px; font-size: 13px; }
+.finder .row { display: flex; gap: 6px; align-items: center; }
+.finder input { flex: 1; min-width: 0; padding: 4px 6px; font: inherit; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.finder input, .finder select {
+  color: var(--ui-fg); background: var(--ui-bg);
+  border: 1px solid var(--ui-border); border-radius: 4px;
+}
+.finder .label { color: var(--ui-muted); }
+.finder .count { min-width: 5ch; text-align: right; color: var(--ui-muted); font-variant-numeric: tabular-nums; }
+.finder button { padding: 2px 8px; }
+.finder .message { margin: 0; font-size: 12px; color: var(--ui-muted); }
+.finder .message[data-tone="error"] { color: var(--hexcanvas-danger); }
+/* The hit list, which is the half the built-in panel has no way to show. */
+.finder .hits {
+  list-style: none; margin: 0; padding: 0;
+  overflow: auto;
+  border-top: 1px solid var(--ui-hairline);
+}
+.finder .hits button {
+  width: 100%; display: flex; gap: 10px; align-items: baseline;
+  background: transparent; border: 0; border-radius: 4px; padding: 5px 6px;
+  font: inherit; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; text-align: left;
+}
+.finder .hits button:hover { background: var(--ui-raised); }
+.finder .hits .current { background: var(--ui-raised); font-weight: 700; }
+.finder .hits .size { margin-left: auto; color: var(--ui-muted); font-size: 12px; }

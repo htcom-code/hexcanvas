@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "types": ["vitest/globals"],
+    "paths": {
+      "@hexcanvas/core": ["./packages/core/src/index.ts"],
+      "@hexcanvas/element": ["./packages/element/src/index.ts"],
+      "@hexcanvas/react": ["./packages/react/src/index.ts"],
+      "@hexcanvas/vue": ["./packages/vue/src/index.ts"],
+      "@hexcanvas/svelte": ["./packages/svelte/src/index.ts"]
+    }
+  },
+  "include": ["test", "vitest.config.ts", "demo/src/env.d.ts"]
+}

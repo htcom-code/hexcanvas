@@ -1,0 +1,51 @@
+{
+  "name": "@hexcanvas/element",
+  "version": "0.1.0",
+  "description": "<hexcanvas-editor> custom element: a hex viewer and editor usable from any framework.",
+  "keywords": [
+    "hex",
+    "hex-editor",
+    "binary",
+    "web-component",
+    "custom-element"
+  ],
+  "license": "MIT",
+  "author": "htjulia",
+  "homepage": "https://hexcanvas.htcom.org",
+  "bugs": {
+    "url": "https://github.com/htcom-code/hexcanvas/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/htcom-code/hexcanvas.git",
+    "directory": "packages/element"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "type": "module",
+  "sideEffects": [
+    "./dist/index.js"
+  ],
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@hexcanvas/core": "workspace:*"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "check": "tsc -p tsconfig.json --noEmit"
+  }
+}

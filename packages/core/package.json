@@ -1,0 +1,46 @@
+{
+  "name": "@hexcanvas/core",
+  "version": "0.1.0",
+  "description": "Framework-free hex editor core: byte sources, grid geometry, canvas renderer and editing engine.",
+  "keywords": [
+    "hex",
+    "hex-editor",
+    "binary",
+    "canvas",
+    "piece-table"
+  ],
+  "license": "MIT",
+  "author": "htjulia",
+  "homepage": "https://hexcanvas.htcom.org",
+  "bugs": {
+    "url": "https://github.com/htcom-code/hexcanvas/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/htcom-code/hexcanvas.git",
+    "directory": "packages/core"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "check": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json"
+  }
+}

@@ -1,0 +1,27 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# build output
+dist/
+*.tsbuildinfo
+
+# local env / editor
+# .npmrc would hold a registry token; a publish job writes one and deletes it.
+.npmrc
+.env
+.env.*
+!.env.example
+.DS_Store
+.idea/
+.vscode/
+
+# logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Generated API documentation: typedoc rebuilds it from the sources, and the
+# committed thing is the report under packages/*/etc, not this.
+api/
+packages/*/temp/

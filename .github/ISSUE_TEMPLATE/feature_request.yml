@@ -1,0 +1,71 @@
+name: Feature request
+description: Something the library should be able to do and cannot.
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        HexCanvas aims to be **complete in the library and opt-in at the call site** — a
+        consumer picks the layers it needs and never has to supply an edit model, an undo
+        stack or a search of its own. Requests that move work back onto the host are the
+        ones most likely to be declined, so it helps to say which side of that line you
+        think this falls on.
+
+        **Already declined**, with the reasoning in [ROADMAP.md](https://github.com/htcom-code/hexcanvas/blob/main/ROADMAP.md).
+        Each says what would make it wrong — if you have that case, the issue is worth
+        opening anyway:
+
+        | 🚫 | Because |
+        |---|---|
+        | A CommonJS build | ESM only; `require()` failing loudly beats half-working |
+        | A stylesheet | A selector cannot reach a canvas, so colours would be declared twice |
+        | Options for the renderer's cell arithmetic | Each is tied to one drawing operation and pinned pixel for pixel |
+        | A list of known code pages | `printable` is a function, so no list can be missing yours |
+        | Two cursors in a comparison | Both panes cannot be "where you are" |
+        | Edit mode as a mode plus a flag | The pair can describe states that do not exist |
+        | Splitting the packages further | 30 kB min+gz total — bring a bundle measurement |
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What you are trying to do
+      description: >-
+        The task, not the feature. "I need to X and there is no way to" survives review
+        better than "add an option for Y", because the option is often not the answer.
+    validations:
+      required: true
+
+  - type: textarea
+    id: workaround
+    attributes:
+      label: What you do now instead
+      description: >-
+        The workaround, if there is one, and what it costs. If you had to reach past the
+        public API to get it working, say where — that is usually the real report.
+    validations:
+      required: false
+
+  - type: dropdown
+    id: shape
+    attributes:
+      label: Which layer does this belong to
+      options:
+        - "Storage — ByteSource, editing, history"
+        - "Rendering — the grid, geometry, theming"
+        - "Interaction — cursor, selection, keys, search"
+        - "Decorations — overlays, labels, parse results"
+        - "Bindings — element, React, Vue, Svelte"
+        - "Not sure"
+    validations:
+      required: true
+
+  - type: textarea
+    id: scale
+    attributes:
+      label: Scale it has to work at
+      description: >-
+        Document size, number of ranges, edits per second. The design already trades on
+        these — a feature that is free at demo scale can be unaffordable at a hundred
+        megabytes, and knowing which one you are in changes the answer.
+    validations:
+      required: false

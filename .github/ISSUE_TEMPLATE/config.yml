@@ -1,0 +1,10 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/htcom-code/hexcanvas/security/advisories/new
+    about: Report privately. Please do not open a public issue.
+  - name: Questions and design discussion
+    url: https://github.com/htcom-code/hexcanvas/discussions
+    about: >-
+      Ask before filing if you are unsure whether something is a defect or a
+      documented trade-off. The README describes the costs that are known and accepted.

@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HexCanvas bindings</title>
+    <style>
+      :root { font-family: Inter, ui-sans-serif, system-ui, sans-serif; color: #e5e7eb; background: #090e19; }
+      body { margin: 0; padding: 24px; display: grid; gap: 16px; }
+      h2 { font-size: 14px; font-weight: 600; margin: 0 0 8px; color: #9ca3af; }
+      section { --hexcanvas-height: 260px; }
+      output { display: block; margin-top: 8px; font: 13px ui-monospace, monospace; color: #9ca3af; }
+    </style>
+  </head>
+  <body>
+    <section><h2>@hexcanvas/vue</h2><div id="vue"></div><output id="vue-status">—</output></section>
+    <section><h2>@hexcanvas/svelte (action target mounted by createHexEditor)</h2><div id="svelte"></div><output id="svelte-status">—</output></section>
+    <script type="module">
+      import { createApp, h } from "vue";
+      import { MemoryByteSource } from "@hexcanvas/core";
+      import { HexEditor } from "@hexcanvas/vue";
+      import { createHexEditor } from "@hexcanvas/svelte";
+
+      const makeSource = (label) => {
+        const text = new TextEncoder().encode(`${label} binding over the custom element.\n`);
+        const bytes = new Uint8Array(2048);
+        for (let index = 0; index < bytes.length; index++) bytes[index] = text[index % text.length];
+        return new MemoryByteSource(bytes);
+      };
+
+      const report = (id, engine) => {
+        const output = document.getElementById(id);
+        const render = () => {
+          const state = engine.getState();
+          output.textContent = `cursor 0x${state.cursor.offset.toString(16).padStart(8, "0").toUpperCase()} · ${state.selection ? state.selection.end - state.selection.start : 0} selected · ${state.editMode}`;
+        };
+        engine.subscribe(render);
+        render();
+      };
+
+      createApp({
+        setup: () => () => h(HexEditor, {
+          source: makeSource("Vue"),
+          byteGroup: 4,
+          onReady: (engine) => { window.vueEngine = engine; report("vue-status", engine); },
+        }),
+      }).mount("#vue");
+
+      const element = createHexEditor(document.getElementById("svelte"), {
+        source: makeSource("Svelte"),
+        byteGroup: 2,
+        editMode: "insert",
+        onEngine: (engine) => { window.svelteEngine = engine; report("svelte-status", engine); },
+      });
+      window.svelteElement = element;
+    </script>
+  </body>
+</html>

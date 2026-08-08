@@ -1,0 +1,51 @@
+{
+  "name": "@hexcanvas/svelte",
+  "version": "0.1.0",
+  "description": "Svelte action and mount helper for HexCanvas, over the <hexcanvas-editor> custom element.",
+  "keywords": [
+    "hex",
+    "hex-editor",
+    "binary",
+    "svelte"
+  ],
+  "license": "MIT",
+  "author": "htjulia",
+  "homepage": "https://hexcanvas.htcom.org",
+  "bugs": {
+    "url": "https://github.com/htcom-code/hexcanvas/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/htcom-code/hexcanvas.git",
+    "directory": "packages/svelte"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "type": "module",
+  "sideEffects": [
+    "./dist/index.js"
+  ],
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@hexcanvas/core": "workspace:*",
+    "@hexcanvas/element": "workspace:*"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "check": "tsc -p tsconfig.json --noEmit"
+  }
+}

@@ -1,0 +1,62 @@
+name: Bug report
+description: Something the editor does that it should not, or does not that it should.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please do not report a security issue here — see
+        [SECURITY.md](https://github.com/htcom-code/hexcanvas/blob/main/SECURITY.md).
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you saw, and what you expected instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: How to reproduce
+      description: >-
+        The bytes matter. A hex dump of the smallest document that shows it, the offsets
+        involved, and the sequence of keys or clicks. If it only happens at a particular
+        document size or scroll position, say so — several defects here were only
+        visible past a certain file size.
+      placeholder: |
+        1. Load these bytes: 00 01 02 …
+        2. Scroll to offset 0x1000
+        3. Press …
+    validations:
+      required: true
+
+  - type: input
+    id: packages
+    attributes:
+      label: Packages and versions
+      placeholder: "@hexcanvas/core 0.1.0, @hexcanvas/react 0.1.0"
+    validations:
+      required: true
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and OS
+      description: >-
+        The renderer draws to a canvas, so the engine and the platform both matter.
+      placeholder: Chrome 140 on macOS 15
+    validations:
+      required: true
+
+  - type: textarea
+    id: host
+    attributes:
+      label: How it is embedded
+      description: >-
+        Which binding, and anything the host supplies itself — a custom `ByteSource`,
+        a decoration source, a `SearchProvider` or `DiffProvider`. A defect that only
+        appears with a host-supplied layer usually lives at that boundary.
+    validations:
+      required: false

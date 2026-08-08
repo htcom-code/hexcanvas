@@ -1,0 +1,4 @@
+# Every path, one owner. `@htcom-code` is the GitHub *login* — a display name here
+# resolves to nothing and the rule is silently ignored, which is how three sibling
+# repositories ended up with a CODEOWNERS that did nothing.
+*       @htcom-code

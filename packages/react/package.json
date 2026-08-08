@@ -1,0 +1,56 @@
+{
+  "name": "@hexcanvas/react",
+  "version": "0.1.0",
+  "description": "React binding for HexCanvas: a canvas-rendered hex viewer and editor.",
+  "keywords": [
+    "hex",
+    "hex-editor",
+    "binary",
+    "react",
+    "canvas"
+  ],
+  "license": "MIT",
+  "author": "htjulia",
+  "homepage": "https://hexcanvas.htcom.org",
+  "bugs": {
+    "url": "https://github.com/htcom-code/hexcanvas/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/htcom-code/hexcanvas.git",
+    "directory": "packages/react"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "type": "module",
+  "sideEffects": [
+    "./dist/hex-editor.js"
+  ],
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0",
+    "react-dom": "^18.0.0 || ^19.0.0"
+  },
+  "dependencies": {
+    "@hexcanvas/core": "workspace:*",
+    "@hexcanvas/element": "workspace:*"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "check": "tsc -p tsconfig.json --noEmit"
+  }
+}

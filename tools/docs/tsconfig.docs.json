@@ -1,0 +1,27 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "paths": {
+      "@hexcanvas/core": [
+        "../../packages/core/src/index.ts"
+      ],
+      "@hexcanvas/element": [
+        "../../packages/element/src/index.ts"
+      ],
+      "@hexcanvas/react": [
+        "../../packages/react/src/index.ts"
+      ],
+      "@hexcanvas/vue": [
+        "../../packages/vue/src/index.ts"
+      ],
+      "@hexcanvas/svelte": [
+        "../../packages/svelte/src/index.ts"
+      ]
+    }
+  },
+  "include": [
+    "../../packages/*/src"
+  ]
+}

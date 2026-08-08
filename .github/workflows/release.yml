@@ -1,0 +1,167 @@
+# Publishing the five packages to npm, triggered by a `v*` tag.
+#
+# npm keeps a version number forever — unpublishing frees nothing and the number can
+# never be reused — so every gate this repository has runs before the publish step
+# rather than after it. The tag is not a release on its own; it is a request to try.
+#
+# `workflow_dispatch` with `dry_run` (the default) exercises the whole path without
+# publishing, which is the only way to find out whether this file works before a tag
+# has already been pushed.
+
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Pack and check the tarballs without publishing"
+        type: boolean
+        default: true
+
+# The default for every job. `publish` raises its own; nothing else needs more than
+# reading the tree.
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  # The tag has to agree with the manifests before anything is built: all five packages
+  # move as one version (they depend on each other), so `v0.1.0` means five 0.1.0s.
+  verify:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.1.3 --activate
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: read the version from the tag
+        id: version
+        run: |
+          # A dispatch has no tag, so it checks whatever the manifests currently say.
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            version="${GITHUB_REF_NAME#v}"
+            echo "releasing $version from tag $GITHUB_REF_NAME"
+          else
+            version=""
+            echo "dispatch: checking the working manifests, whatever version they carry"
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - run: pnpm check
+      # The public surface still matches its committed report. A release is the one
+      # moment this cannot be corrected afterwards: the API in a published version is
+      # what that version has forever.
+      - run: pnpm api
+      # Packs all five and reads the tarballs back: the version gate, plus the mistakes
+      # that are only visible inside the archive (a missing README, an unrewritten
+      # `workspace:*`, a source map pointing at unpublished src).
+      - run: node scripts/check-publish.mjs ${{ steps.version.outputs.version }}
+
+  # The reference for this version, generated from the sources it was cut from.
+  #
+  # A tag is the only point where "the documentation for 0.2.0" means something exact,
+  # so it is built here rather than being taken from whatever main looked like when the
+  # site was last deployed. The documentation site reads this artifact; the API report
+  # rides along so a consumer can diff two releases without a checkout.
+  reference:
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.1.3 --activate
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm api:docs
+      - name: collect the reports beside it
+        run: |
+          mkdir -p api/reports
+          cp packages/*/etc/*.api.md api/reports/
+          ls -la api api/reports
+      - uses: actions/upload-artifact@v7
+        with:
+          name: api-${{ needs.verify.outputs.version || 'dispatch' }}
+          path: api/
+          # Longer than CI's fortnight: this one is tied to a released version, and the
+          # site may be rebuilt from it well after the tag.
+          retention-days: 90
+
+  # A renderer that only passes on a machine with no canvas has not passed. The tag
+  # usually sits on a commit CI already ran, but "usually" is not a gate.
+  browser:
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.62.1-noble
+    env:
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+    steps:
+      - uses: actions/checkout@v7
+      - name: enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.1.3 --activate
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test:browser
+
+  publish:
+    needs: [verify, reference, browser]
+    runs-on: ubuntu-latest
+    permissions:
+      # Provenance signs the build against this workflow run. Requested here rather than
+      # at the top of the file so no other job carries it.
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+      - name: enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.1.3 --activate
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: pnpm
+          # Writes the .npmrc that NODE_AUTH_TOKEN below fills in.
+          registry-url: "https://registry.npmjs.org"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - name: publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          # Provenance as config rather than `--provenance`: the flag is not in `pnpm
+          # publish --help`, so whether it reaches npm depends on pass-through we would
+          # rather not bet a permanent version number on. npm reads this itself.
+          NPM_CONFIG_PROVENANCE: "true"
+        run: |
+          # `--no-git-checks`: a tag build is a detached HEAD, and pnpm otherwise
+          # refuses to publish from anything that is not the publish branch.
+          #
+          # `--tag next`: the first releases are deliberately not `latest`. The
+          # decoration API changed twice in a single session before this repository was
+          # public; pinning `latest` now would make the next change a breaking one for
+          # anyone who typed `npm install @hexcanvas/core`.
+          #
+          # pnpm, never npm: `workspace:*` is rewritten as pnpm packs. Published through
+          # npm the four bindings would carry a range no registry can resolve.
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.dry_run }}" = "true" ]; then
+            pnpm publish -r --tag next --access public --no-git-checks --dry-run
+          else
+            pnpm publish -r --tag next --access public --no-git-checks
+          fi

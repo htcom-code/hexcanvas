@@ -1,0 +1,43 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/api-extractor/v7/api-extractor.schema.json",
+
+  "mainEntryPointFilePath": "<projectFolder>/dist/index.d.ts",
+
+  // The committed report is the point. It is the whole public surface in one
+  // reviewable file, so a change to what consumers can see turns up in the diff
+  // instead of in a bug report after release — and every member without a doc
+  // comment is marked, which makes coverage visible without making it a gate.
+  "apiReport": {
+    "enabled": true,
+    "reportFolder": "<projectFolder>/etc/",
+    "reportTempFolder": "<projectFolder>/temp/",
+    "reportFileName": "<unscopedPackageName>.api.md"
+  },
+
+  // The site is fed by typedoc, which reads the sources and keeps the prose.
+  // This tool is here for the gate, so it produces nothing else.
+  "docModel": { "enabled": false },
+  "dtsRollup": { "enabled": false },
+  "tsdocMetadata": { "enabled": false },
+
+  "messages": {
+    "compilerMessageReporting": { "default": { "logLevel": "warning" } },
+    "extractorMessageReporting": {
+      "default": { "logLevel": "warning" },
+      // Release tags are a Rush convention for staging an API across
+      // @alpha/@beta/@public. Everything here is public or not exported, so the
+      // tag would be noise on 135 declarations.
+      "ae-missing-release-tag": { "logLevel": "none" },
+      // A type that the public surface names but does not export: a consumer can
+      // call the function and cannot write down what it returns. Caught two of
+      // these the first time it ran.
+      "ae-forgotten-export": { "logLevel": "error" },
+      // Write-only is deliberate on the elements: a host assigns an object and
+      // never reads it back, and adding a getter for symmetry would mean holding
+      // a second copy of state the engine already owns. The report lists them, so
+      // the shape stays visible without being reported as a defect every run.
+      "ae-missing-getter": { "logLevel": "none" }
+    },
+    "tsdocMessageReporting": { "default": { "logLevel": "warning" } }
+  }
+}

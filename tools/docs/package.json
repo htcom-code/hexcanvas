@@ -1,0 +1,15 @@
+{
+  "name": "@hexcanvas/docs-tools",
+  "private": true,
+  "version": "0.0.0",
+  "description": "TypeDoc lives here rather than at the root because it cannot use the repository's TypeScript: its peer range stops at 6.0 and the build is on 7. pnpm isolates this package, so typedoc links the 6.0 pinned below while every other command keeps 7.",
+  "type": "module",
+  "scripts": {
+    "api:json": "typedoc --options typedoc.json",
+    "api:html": "typedoc --options typedoc.json --json '' --out ../../docs-site"
+  },
+  "devDependencies": {
+    "typedoc": "^0.28.20",
+    "typescript": "6.0.3"
+  }
+}

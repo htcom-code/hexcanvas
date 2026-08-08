@@ -1,0 +1,25 @@
+{
+  "name": "demo",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -p tsconfig.json && vite build",
+    "check": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@hexcanvas/core": "workspace:*",
+    "@hexcanvas/element": "workspace:*",
+    "@hexcanvas/react": "workspace:*",
+    "@hexcanvas/svelte": "workspace:*",
+    "@hexcanvas/vue": "workspace:*",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "vue": "^3.5.13"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^6.0.5",
+    "vite": "^8.2.0"
+  }
+}

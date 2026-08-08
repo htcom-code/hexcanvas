@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "declaration": true,
+    // No maps. `files` publishes `dist` alone, so a map in the tarball points at a
+    // `../src` the consumer never received — most of what a package weighed, in
+    // exchange for a broken link. Turning them off here rather than in a release
+    // build means `dist` can never be packed with them by accident; check-publish
+    // fails on a stray one. The suites read `src` directly (vitest.config.ts), so
+    // the only thing this costs is stepping through the playground's copy of the
+    // built output instead of the TypeScript it came from.
+    "declarationMap": false,
+    "sourceMap": false,
+    "skipLibCheck": true,
+    "verbatimModuleSyntax": true
+  }
+}

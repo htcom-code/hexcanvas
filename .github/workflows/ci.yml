@@ -1,0 +1,130 @@
+# The three gates a contributor runs locally (CONTRIBUTING.md): `pnpm check`,
+# `pnpm api` and `pnpm test:browser`.
+#
+# `ci-complete` is the single job to mark as the required status check. Marking them
+# individually works until a job becomes conditional, at which point a
+# skipped job leaves a required check waiting forever.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+    # A paths filter is safe here: this runs after the merge, so it gates nothing.
+    paths:
+      - "packages/**"
+      - "demo/**"
+      - "test/**"
+      - "scripts/**"
+      - "config/**"
+      - "tools/**"
+      - "*.json"
+      - "pnpm-lock.yaml"
+      - "vitest.config.ts"
+      - ".github/workflows/ci.yml"
+  # Deliberately no paths filter on pull_request. A filtered PR trigger skips the whole
+  # workflow on a docs-only change, which leaves the required check stuck on
+  # "Expected — waiting for status" and blocks the merge for anyone who cannot bypass
+  # branch protection. Three sibling repositories had to remove this filter after
+  # hitting exactly that.
+  pull_request:
+
+# The default for every job. `publish` raises its own; nothing else needs more than
+# reading the tree.
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Build, type-check every package and the playground, then the core suite.
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: enable pnpm
+        # corepack rather than an action, so the version comes from the same place the
+        # local gate reads it and there is one fewer action to keep pinned.
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.1.3 --activate
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check
+
+  # What consumers can see, and whether it changed without anyone saying so.
+  #
+  # `pnpm api` re-derives the public surface from the built .d.ts and compares it to
+  # the report committed under packages/*/etc. A difference is not a failure of the
+  # build — it is a change to the API that has to be deliberate, and the fix is
+  # `pnpm api:update` plus a sentence in the pull request. It also fails on a type
+  # the API names but does not export, which is a thing a consumer cannot work around.
+  #
+  # `pnpm api:docs` runs typedoc with warnings as errors, so a broken `{@link}` or a
+  # symbol the documentation references but the package does not export stops here.
+  # It is also what produces the JSON the documentation site reads.
+  api:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.1.3 --activate
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm api
+      - run: pnpm api:docs
+      - uses: actions/upload-artifact@v7
+        with:
+          name: api
+          path: api/
+          retention-days: 14
+
+  # The renderer and the four bindings need a real canvas. The playwright image ships
+  # the matching chromium, so this job adds a base image rather than a browser download
+  # — the tag has to move with the `playwright` devDependency.
+  browser:
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.62.1-noble
+    env:
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+    steps:
+      - uses: actions/checkout@v7
+      - name: enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.1.3 --activate
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test:browser
+
+  # The one required status check. `always()` so it reports even when an upstream job
+  # fails — without it the check never appears and the pull request cannot be merged —
+  # and the results are then examined explicitly, because `always()` alone would let a
+  # failed upstream through. `skipped` counts as passing, so a job that becomes
+  # conditional later does not turn into a merge block.
+  ci-complete:
+    if: always()
+    needs: [check, api, browser]
+    runs-on: ubuntu-latest
+    steps:
+      - name: gate on upstream results
+        run: |
+          echo "check=${{ needs.check.result }} api=${{ needs.api.result }} browser=${{ needs.browser.result }}"
+          for result in "${{ needs.check.result }}" "${{ needs.api.result }}" "${{ needs.browser.result }}"; do
+            if [ "$result" = "failure" ] || [ "$result" = "cancelled" ]; then
+              echo "a required job did not pass"
+              exit 1
+            fi
+          done
+          echo "all required jobs passed or were skipped"
