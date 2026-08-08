@@ -1,6 +1,6 @@
 {
   "name": "@hexcanvas/core",
-  "version": "0.1.0",
+  "version": "0.1.0-next.0",
   "description": "Framework-free hex editor core: byte sources, grid geometry, canvas renderer and editing engine.",
   "keywords": [
     "hex",

@@ -10,7 +10,7 @@ element on a page. The React, Vue and Svelte bindings all wrap this element rath
 building the chrome a second time.
 
 ```sh
-npm install @hexcanvas/element
+npm install @hexcanvas/element@next
 ```
 
 Importing the package registers the element. `defineHexCanvasElement(tag)` is exported for a
