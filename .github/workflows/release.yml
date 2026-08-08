@@ -1,12 +1,17 @@
-# Publishing the five packages to npm, triggered by a `v*` tag.
+# Staging the five packages for release, triggered by a `v*` tag.
 #
-# npm keeps a version number forever — unpublishing frees nothing and the number can
-# never be reused — so every gate this repository has runs before the publish step
-# rather than after it. The tag is not a release on its own; it is a request to try.
+# A tag does not publish anything. It builds the release, proves it installs, and leaves
+# it in npm's staging area for a person to approve — approval needs 2FA, so no workflow
+# can do it. Until then nothing is installable.
+#
+# npm keeps a published version number forever, so the gates that answer "are these
+# artifacts correct" all run before anything leaves the runner. Staging adds the one
+# question they cannot answer — whether to release at all — and it is the only step that
+# can be taken back: rejecting a stage deletes the record and frees the version number.
 #
 # `workflow_dispatch` with `dry_run` (the default) exercises the whole path without
-# publishing, which is the only way to find out whether this file works before a tag
-# has already been pushed.
+# staging, which is the only way to find out whether this file works before a tag has
+# already been pushed.
 
 name: Release
 
@@ -20,7 +25,7 @@ on:
         type: boolean
         default: true
 
-# The default for every job. `publish` raises its own; nothing else needs more than
+# The default for every job. `stage` raises its own; nothing else needs more than
 # reading the tree.
 permissions:
   contents: read
@@ -124,7 +129,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm test:browser
 
-  # The same publish, first, to a registry that is deleted when this job ends.
+  # The same release, first, to a registry that is deleted when this job ends.
   #
   # `verify` reads the tarballs; this one installs them. Everything a resolver decides
   # lives here — whether the `exports` map hands a consumer the right file, whether the
@@ -167,7 +172,24 @@ jobs:
         if: failure()
         run: docker logs registry
 
-  publish:
+  # Uploads the release to npm's staging area. It is not installable until a human
+  # approves it, and approval needs 2FA, which no workflow can supply.
+  #
+  # This is the one gate that survives the irreversible step. Everything before it proves
+  # the artifacts are correct; this one asks whether to publish them at all — and a
+  # rejected stage takes its version number with it, so answering "no" costs nothing.
+  # Measured before being wired: `npm stage reject` deleted the record and the same
+  # version staged again with a new id.
+  #
+  # Two things forced the switch away from `pnpm publish`, and staging happens to fix
+  # both. pnpm never reads the `provenance` setting — it is in its rc option list but no
+  # env form reaches it, and 0.1.0-next.0 went out with `dist.attestations: null` despite
+  # NPM_CONFIG_PROVENANCE and a working id-token. And pnpm has no staging at all. `npm
+  # stage publish` has a real `--provenance` flag and takes a tarball, which is what
+  # keeps pnpm in the picture: `pnpm pack` is what rewrites `workspace:*`, and publishing
+  # these through plain npm would ship the four bindings with a range no registry can
+  # resolve.
+  stage:
     needs: [verify, reference, browser, consumer]
     runs-on: ubuntu-latest
     permissions:
@@ -186,35 +208,67 @@ jobs:
           cache: pnpm
           # Writes the .npmrc that NODE_AUTH_TOKEN below fills in.
           registry-url: "https://registry.npmjs.org"
+      # Node 22 ships npm 10.9.8, which has no `stage` command at all. Pinned rather than
+      # `@latest` so a release is not the first place a new npm runs.
+      - run: npm install -g npm@12.0.2
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
-      - name: publish
+      - name: pack
+        # pnpm, never npm: `workspace:*` is rewritten as pnpm packs.
+        #
+        # `./packages/*` rather than `-r` or `--filter "@hexcanvas/*"`. `pack` has no
+        # notion of `private: true` the way `publish` does, so `-r` also produces
+        # tarballs for the root, the playground and the docs toolchain — and the name
+        # filter catches `@hexcanvas/docs-tools`, which is how that package once had its
+        # version bumped by a release command. The path is the only filter that means
+        # exactly the five published packages.
+        run: |
+          mkdir -p tarballs
+          pnpm --filter "./packages/*" pack --pack-destination "$PWD/tarballs"
+          set -- tarballs/*.tgz
+          printf '%s\n' "$@"
+          test "$#" -eq 5
+      - name: stage
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          # Provenance as config rather than `--provenance`: the flag is not in `pnpm
-          # publish --help`, so whether it reaches npm depends on pass-through we would
-          # rather not bet a permanent version number on. npm reads this itself.
-          NPM_CONFIG_PROVENANCE: "true"
         run: |
-          # `--no-git-checks`: a tag build is a detached HEAD, and pnpm otherwise
-          # refuses to publish from anything that is not the publish branch.
-          #
-          # `--tag next`: prereleases should not become what `npm install @hexcanvas/core`
-          # resolves to. The decoration API changed shape twice in a single session before
-          # this repository was public.
-          #
-          # It does not do that on a package's *first* publish. 0.1.0-next.0 came out as
-          # both `next` and `latest`, because npm will not leave a new package without a
-          # `latest` and sets it whatever this flag says. Measured on the registry after
-          # publishing, not read in a document — the documentation claimed the opposite
-          # until then. The flag governs every release after the first, which is the case
-          # that matters: once a stable version holds `latest`, a prerelease published
-          # this way leaves it alone.
-          #
-          # pnpm, never npm: `workspace:*` is rewritten as pnpm packs. Published through
-          # npm the four bindings would carry a range no registry can resolve.
+          version="${{ needs.verify.outputs.version }}"
+          # A prerelease must name a tag — npm refuses otherwise — and it must not be
+          # `latest`, or `npm install @hexcanvas/core` starts resolving to it. A stable
+          # release takes the default, which is how `latest` moves.
+          case "$version" in
+            *-*) tag=(--tag next) ;;
+            *)   tag=() ;;
+          esac
+          dry=()
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.dry_run }}" = "true" ]; then
-            pnpm publish -r --tag next --access public --no-git-checks --dry-run
-          else
-            pnpm publish -r --tag next --access public --no-git-checks
+            dry=(--dry-run)
           fi
+          # `./` is load-bearing. npm reads a bare `tarballs/x.tgz` as the GitHub
+          # shorthand `owner/repo` and refuses it: "Refusing to fetch
+          # github:tarballs/hexcanvas-core-0.1.0-next.0.tgz". A leading `./` makes it a
+          # path again.
+          for tarball in ./tarballs/*.tgz; do
+            npm stage publish "$tarball" --access public --provenance "${tag[@]}" "${dry[@]}"
+          done
+      - name: what to do next
+        if: success() && !(github.event_name == 'workflow_dispatch' && inputs.dry_run)
+        run: |
+          # The job stops here on purpose. Approval waits on a person and 2FA, and a
+          # runner held open for that is time spent for nothing.
+          cat >> "$GITHUB_STEP_SUMMARY" <<'SUMMARY'
+          ### Staged, not published
+
+          Nothing is installable yet. Check the artifacts, then approve or reject:
+
+          ```sh
+          npm stage list @hexcanvas/core     # and the other four
+          npm stage download <stage-id>      # the tarball itself
+          npm stage approve <stage-id>       # needs 2FA
+          npm stage reject  <stage-id>       # frees the version number
+          ```
+
+          Approve `@hexcanvas/core` **last**: the four bindings depend on it by exact
+          version, so a window where core is public and they are not is the harmless
+          order, and the reverse breaks installs.
+          SUMMARY
