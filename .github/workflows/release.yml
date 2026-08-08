@@ -232,7 +232,16 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
+          # A dispatch has no tag, so `verify` reports no version. Falling back to the
+          # manifest keeps the dry run on the same branch the real release takes — the
+          # first attempt at this took the empty string, skipped the prerelease branch,
+          # and npm refused the publish. A dry run that does not follow the same path is
+          # not telling you anything.
           version="${{ needs.verify.outputs.version }}"
+          if [ -z "$version" ]; then
+            version=$(node -p "require('./packages/core/package.json').version")
+            echo "no tag; taking $version from the manifest"
+          fi
           # A prerelease must name a tag — npm refuses otherwise — and it must not be
           # `latest`, or `npm install @hexcanvas/core` starts resolving to it. A stable
           # release takes the default, which is how `latest` moves.
