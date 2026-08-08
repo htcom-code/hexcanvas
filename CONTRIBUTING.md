@@ -51,10 +51,10 @@ docker run --rm -p 4873:4873 \
 pnpm verify:registry
 ```
 
-The release workflow runs the same script against the same image before it publishes
-anything. That ordering is deliberate: a version number on npmjs.com can never be
-reused, so a check that runs after publishing can report a problem but cannot prevent
-one.
+The release workflow runs the same script against the same image before it stages
+anything. That ordering is deliberate: a *published* version number on npmjs.com can
+never be reused, so a check that runs after publishing can report a problem but cannot
+prevent one. (A staged version is different — see Releasing below.)
 
 Node 22 and pnpm 11 (`corepack enable` picks up the pinned version).
 
@@ -152,8 +152,33 @@ decision the code currently encodes. Comments here record why a thing is the way
 so a change that makes one of them wrong has to say what replaced it — otherwise the
 next reader trusts a comment that is no longer true.
 
-**Nothing in `CHANGELOG.md` yet.** Nothing is published, so there is no released version
-to describe. Entries go under `[Unreleased]` once the first release is cut.
+**An entry in `CHANGELOG.md`** under `[Unreleased]` if the change is one a consumer would
+notice. `0.1.0-next.0` is published, so there is a released version to describe changes
+against.
+
+## Releasing
+
+A `v*` tag does not publish anything. It runs the gates, then leaves the five packages in
+npm's **staging area**, where they are not installable until someone approves them — and
+approval needs 2FA, which no workflow can supply.
+
+```sh
+npm stage list @hexcanvas/core     # and the other four
+npm stage download <stage-id>      # the tarball itself
+npm stage approve <stage-id>       # needs 2FA
+npm stage reject  <stage-id>       # frees the version number
+```
+
+Approve `@hexcanvas/core` **last**. The four bindings depend on it by exact version, so
+a window where core is public and they are not is the harmless order; the reverse breaks
+installs.
+
+Rejecting is why this is worth doing: it deletes the staged record and the version number
+becomes available again. Everything before staging proves the artifacts are correct;
+staging is where someone decides whether to release them at all, and it is the only step
+that can be taken back.
+
+`gh workflow run release.yml -f dry_run=true` walks the whole path without staging.
 
 ## Style
 

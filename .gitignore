@@ -25,3 +25,6 @@ pnpm-debug.log*
 # committed thing is the report under packages/*/etc, not this.
 api/
 packages/*/temp/
+
+# Release tarballs, produced by the stage job.
+tarballs/
