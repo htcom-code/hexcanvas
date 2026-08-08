@@ -1,0 +1,48 @@
+# The throwaway registry `scripts/verify-registry.mjs` publishes into.
+#
+# The only line that matters is the missing one: `@hexcanvas/*` has no `proxy`.
+#
+# Verdaccio's stock configuration proxies npmjs for everything. Once these packages
+# existed on npmjs that made the gate answer questions about the wrong artifacts — a
+# lookup for `@hexcanvas/core` succeeded through the uplink, `pnpm publish -r` decided
+# there was nothing new to publish, and the consumer then installed the copy from npmjs
+# instead of the one just built. The checks stayed green while testing a release that
+# was already out. Measured on 2026-08-08, the day the first version was published.
+#
+# Everything else still proxies, because the consumer fixture installs react, vue,
+# typescript and esbuild and those have to come from somewhere.
+
+storage: /verdaccio/storage/data
+
+auth:
+  htpasswd:
+    file: /verdaccio/storage/htpasswd
+    # The script registers a user to get a token. Nothing is stored beyond the life of
+    # the container, so there is no credential to leak.
+    max_users: 1000
+
+uplinks:
+  npmjs:
+    url: https://registry.npmjs.org/
+    timeout: 30s
+
+packages:
+  # Ours. Local only — a version that is not published here does not exist here.
+  "@hexcanvas/*":
+    access: $all
+    publish: $authenticated
+    unpublish: $authenticated
+
+  "@*/*":
+    access: $all
+    publish: $authenticated
+    unpublish: $authenticated
+    proxy: npmjs
+
+  "**":
+    access: $all
+    publish: $authenticated
+    unpublish: $authenticated
+    proxy: npmjs
+
+log: { type: stdout, format: pretty, level: warn }

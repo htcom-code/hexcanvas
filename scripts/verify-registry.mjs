@@ -12,6 +12,10 @@
 // reused — unpublishing frees nothing — so the only place a failing check can still
 // change the outcome is here, against a registry that is deleted when the job ends.
 //
+// The registry has to be started with `config/verdaccio.yaml`. Stock verdaccio proxies
+// npmjs, which once these packages were released made this whole exercise circular —
+// see the comment in that file.
+//
 // Usage: node scripts/verify-registry.mjs [--registry http://localhost:4873]
 //        pnpm verify:registry            (assumes verdaccio is already listening)
 
@@ -74,8 +78,10 @@ async function waitForRegistry() {
 // lets anyone create one. That is the whole point of a registry that lives for the
 // length of one job: no credential to store, and nothing to leak if the job logs are
 // public.
+const registryUser = "hexcanvas-ci";
+
 async function register() {
-  const user = "hexcanvas-ci";
+  const user = registryUser;
   const response = await fetch(`${registry}/-/user/org.couchdb.user:${user}`, {
     method: "PUT",
     headers: { "content-type": "application/json" },
@@ -204,6 +210,80 @@ function buildConsumer(token) {
 // ── the checks ──────────────────────────────────────────────────────────────────
 
 /**
+ * That the registry is answering with what this run published, rather than with a copy
+ * of the same version from npmjs.
+ *
+ * Verdaccio proxies npmjs by default. Once these packages existed on npmjs that made the
+ * whole exercise circular: the lookup succeeded through the uplink, `pnpm publish -r`
+ * reported "no new packages", and the consumer installed the released copy while every
+ * check below went green. `config/verdaccio.yaml` removes the uplink for this scope, and
+ * this check is what notices if it ever comes back — the publishing user is recorded per
+ * version, and a proxied packument carries whoever published it to npmjs.
+ */
+/**
+ * That the registry starts without these packages — checked *before* publishing.
+ *
+ * This is the invariant a throwaway registry has to satisfy, and the one that broke.
+ * Verdaccio proxies npmjs by default, so once these packages were released a lookup
+ * succeeded through the uplink, `pnpm publish -r` reported "no new packages", and the
+ * consumer installed the released copy while every check below went green.
+ *
+ * It has to be asked here rather than afterwards. Verdaccio rewrites a proxied package's
+ * `dist.tarball` to its own host, so after the fact a proxied version and a locally
+ * published one are indistinguishable — an earlier version of this check compared that
+ * URL and passed the very defect it was written for.
+ */
+async function assertRegistryIsEmpty() {
+  const found = [];
+  for (const name of packages) {
+    const response = await readRegistry(name);
+    if (response?.ok && (await response.json()).versions?.[versions[name]]) found.push(name);
+  }
+  if (found.length === 0) return;
+  console.error(
+    `\n${found.length} of these packages already exist at ${registry} before publishing:\n` +
+      found.map((name) => `  ${name}@${versions[name]}`).join("\n") +
+      `\n\nThis registry is meant to be empty. Stock verdaccio proxies npmjs — start it with` +
+      `\nconfig/verdaccio.yaml, which removes the uplink for this scope:\n` +
+      `\n  docker run --rm -p 4873:4873 -v "$PWD/config/verdaccio.yaml:/verdaccio/conf/config.yaml:ro" verdaccio/verdaccio:6\n`,
+  );
+  process.exit(1);
+}
+
+/** One retry: verdaccio drops keep-alive connections often enough to matter. */
+async function readRegistry(name) {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      return await fetch(`${registry}/${name.replace("/", "%2f")}`, { headers: { connection: "close" } });
+    } catch {
+      await new Promise((done) => setTimeout(done, 200));
+    }
+  }
+  return undefined;
+}
+
+async function checkPublishedHere() {
+  const before = failures.length;
+  for (const name of packages) {
+    const response = await readRegistry(name);
+    if (!response) {
+      fail("local registry", `${name} could not be read from ${registry}`);
+      continue;
+    }
+    if (!response.ok) {
+      fail("local registry", `${name} answered ${response.status} — the publish step did not reach this registry`);
+      continue;
+    }
+    const published = (await response.json()).versions?.[versions[name]];
+    if (!published) {
+      fail("local registry", `${name}@${versions[name]} is not here — the publish step decided there was nothing new`);
+      continue;
+    }
+  }
+  if (failures.length === before) pass("published by this run", `${packages.length} packages arrived at the throwaway registry`);
+}
+
+/**
  * The dependency ranges a consumer actually received. pnpm rewrites `workspace:*` as it
  * packs, and `check-publish.mjs` confirms that in the tarball — but a rewritten range is
  * only useful if it resolves, and that answer comes from the registry. A binding whose
@@ -314,6 +394,7 @@ function checkBundle(consumer) {
 
 console.log(`registry ${registry}`);
 await waitForRegistry();
+await assertRegistryIsEmpty();
 const token = await register();
 
 const npmrc = join(mkdtempSync(join(tmpdir(), "hexcanvas-npmrc-")), ".npmrc");
@@ -323,7 +404,12 @@ const publishEnv = { ...process.env, NPM_CONFIG_USERCONFIG: npmrc, npm_config_re
 console.log(`\npublishing ${version} to the throwaway registry`);
 // `--tag ci`: this registry is gone in a minute, but a tag that is not `latest` keeps
 // the command shaped like the real one, where the tag is deliberate.
-mustRun("pnpm", ["publish", "-r", "--registry", `${registry}/`, "--tag", "ci", "--access", "public", "--no-git-checks", "--report-summary=false"], {
+// `--force`: without it pnpm decides there is nothing new to publish. It reaches that
+// conclusion about npmjs rather than about the registry named here — cutting the uplink
+// in config/verdaccio.yaml made the lookup 404 and changed nothing — so once a version
+// exists upstream the publish silently becomes a no-op. `checkPublishedHere` is what
+// makes that visible if it happens again.
+mustRun("pnpm", ["publish", "-r", "--registry", `${registry}/`, "--tag", "ci", "--access", "public", "--no-git-checks", "--force", "--report-summary=false"], {
   cwd: root,
   env: publishEnv,
 });
@@ -334,6 +420,7 @@ console.log(`  ${consumer}`);
 mustRun("npm", ["install", "--no-audit", "--no-fund", "--loglevel", "error"], { cwd: consumer, env: { ...process.env, NPM_CONFIG_USERCONFIG: npmrc } });
 
 console.log("\nchecks");
+await checkPublishedHere();
 checkResolvedDependencies(consumer);
 checkRuntimeImport(consumer);
 checkCommonJsRefusal(consumer);
