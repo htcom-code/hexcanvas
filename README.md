@@ -67,8 +67,13 @@ the cursor.*
 ## Quick start
 
 ```sh
-npm install @hexcanvas/core @hexcanvas/element   # or pnpm add / yarn add
+npm install @hexcanvas/core@next @hexcanvas/element@next   # or pnpm add / yarn add
 ```
+
+> **`@next` is not optional yet.** The first releases carry the `next` dist-tag and
+> nothing carries `latest`, so `npm install @hexcanvas/core` fails rather than installing
+> an older version. The tag drops out of these commands when 0.1.0 is released — see
+> [ROADMAP.md](ROADMAP.md) for why the API is not being pinned as `latest` yet.
 
 <details open>
 <summary><b>Plain HTML — no framework</b></summary>
@@ -87,7 +92,7 @@ npm install @hexcanvas/core @hexcanvas/element   # or pnpm add / yarn add
 </details>
 
 <details>
-<summary><b>React</b> — <code>npm install @hexcanvas/react @hexcanvas/core</code></summary>
+<summary><b>React</b> — <code>npm install @hexcanvas/react@next @hexcanvas/core@next</code></summary>
 
 ```tsx
 import { HexEditor } from "@hexcanvas/react";
@@ -102,7 +107,7 @@ React 18 or 19; `react` and `react-dom` are peer dependencies.
 </details>
 
 <details>
-<summary><b>Vue</b> — <code>npm install @hexcanvas/vue @hexcanvas/core</code></summary>
+<summary><b>Vue</b> — <code>npm install @hexcanvas/vue@next @hexcanvas/core@next</code></summary>
 
 ```vue
 <script setup lang="ts">
@@ -121,7 +126,7 @@ Vue 3.4 or later. The element is created in a render function, so no `isCustomEl
 </details>
 
 <details>
-<summary><b>Svelte</b> — <code>npm install @hexcanvas/svelte @hexcanvas/core</code></summary>
+<summary><b>Svelte</b> — <code>npm install @hexcanvas/svelte@next @hexcanvas/core@next</code></summary>
 
 ```svelte
 <script lang="ts">

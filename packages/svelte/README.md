@@ -8,7 +8,7 @@ rather than a component, so the package needs no compiler and no Svelte dependen
 editor chrome stays in the element, where the React and Vue bindings share it.
 
 ```sh
-npm install @hexcanvas/svelte @hexcanvas/core
+npm install @hexcanvas/svelte@next @hexcanvas/core@next
 ```
 
 ```svelte

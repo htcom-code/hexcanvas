@@ -9,20 +9,31 @@ version lines would multiply into combinations nobody tests.
 
 ## [Unreleased]
 
-Nothing has been published. The version in every manifest is `0.1.0`, which is a
-placeholder rather than a released version; the first release will carry the `next`
-dist-tag rather than `latest`, because the decoration API changed shape twice in a
-single session and pinning `latest` would make the change after that a breaking one.
+Nothing since 0.1.0-next.0.
+
+## [0.1.0-next.0] — 2026-08-08
+
+The first release. It carries the **`next` dist-tag and nothing carries `latest`**, so
+installing it means asking for it by name:
+
+```sh
+npm install @hexcanvas/core@next
+```
+
+`npm install @hexcanvas/core` is an error rather than an older version, which is the
+intended shape: the decoration API changed twice in a single session before this was
+public, and pinning `latest` now would make the next change a breaking one for anyone who
+typed the short command. A caret range does not reach this version either — npm excludes
+prereleases from ranges — so nobody receives it without asking.
 
 What exists is described in [README.md](README.md), down to the costs that are known and
-accepted; what will not exist is in [ROADMAP.md](ROADMAP.md). This file starts describing
-releases once there is one.
+accepted; what will not exist is in [ROADMAP.md](ROADMAP.md).
 
 ### Fixed
 
-Defects found while preparing the first release. They are listed before there is a
-release because they say what kind of mistake this project makes — all six are things a
-consumer would have met and no test could see.
+Defects found while preparing this release. They are listed in the first release rather
+than left out because they say what kind of mistake this project makes — all eight are
+things a consumer would have met and no test could see.
 
 - **Types named by the public API but not exported.** `parseBinding()` could be called
   and its return type could not be written down; the same for the Svelte action's return.
@@ -56,4 +67,5 @@ consumer would have met and no test could see.
   zero; the rest is down to 132, with the remainder being platform callbacks and button
   labels where a comment would restate the name.
 
-[Unreleased]: https://github.com/htcom-code/hexcanvas/commits/main
+[Unreleased]: https://github.com/htcom-code/hexcanvas/compare/v0.1.0-next.0...main
+[0.1.0-next.0]: https://github.com/htcom-code/hexcanvas/releases/tag/v0.1.0-next.0

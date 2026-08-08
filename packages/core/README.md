@@ -15,7 +15,7 @@ directly when you are porting the editor to another framework, or when you want 
 sources and the search machinery without the editor chrome.
 
 ```sh
-npm install @hexcanvas/core
+npm install @hexcanvas/core@next
 ```
 
 ## Byte sources
