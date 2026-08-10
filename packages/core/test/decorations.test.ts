@@ -48,6 +48,21 @@ describe("DecorationStore", () => {
     expect(labels(nested().between(20, 32))).toEqual(["record"]);
   });
 
+  it("does not report a range that covers no byte", () => {
+    // A parse result carries them — a zero-length record is a fact about the file — and a
+    // row query contains one rather than touching its bounds, which is the case that used
+    // to hand it to the renderer as if it overlapped.
+    const store = new DecorationStore();
+    store.addAll([{ start: 0, end: 48, label: "record" }, { start: 16, end: 16, label: "empty" }]);
+    expect(labels(store.between(0, 32))).toEqual(["record"]);
+    expect(labels(store.between(16, 17))).toEqual(["record"]);
+    expect(labels(store.allAt(16))).toEqual(["record"]);
+    expect(store.at(16, "structure")).toBeUndefined();
+    // Still held and still reported as a range: the store does not decide it is a mistake.
+    expect(store.size).toBe(2);
+    expect(labels(store.all)).toEqual(["record", "empty"]);
+  });
+
   it("filters by kind", () => {
     const store = new DecorationStore();
     store.addAll([{ start: 0, end: 1, kind: "bookmark" }, { start: 0, end: 8, kind: "structure" }]);

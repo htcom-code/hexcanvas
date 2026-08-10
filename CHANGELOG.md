@@ -9,7 +9,23 @@ version lines would multiply into combinations nobody tests.
 
 ## [Unreleased]
 
-Nothing since 0.1.0.
+### Fixed
+
+- **A range covering no byte no longer breaks the decoration indexes.** One zero-length
+  range was enough to make `new IntervalIndex(...)` exhaust the stack: a range with
+  `start === end` cannot satisfy the centre test the build sorts on, so it was handed
+  down a level at every step and, once alone in a list, split into itself for ever. A
+  parser produces such ranges — a zero-length record is a fact about the file — so a
+  consumer lost the whole view over one of them. `IntervalColumns` did not hang, but it
+  reported an empty range as overlapping any query that contained it, which
+  `DecorationStore.between` passed on to the renderer. Both indexes now leave out a range
+  with `end <= start`, which is what half-open already means and what
+  `DecorationStore.map` already did with a range an edit had emptied.
+- **A range reaching to infinity is indexed instead of hanging.** Its midpoint is not
+  finite, and a centre of `Infinity` pushes every range into one child — the same
+  non-terminating split by another route. The centre falls back to a median start, which
+  a range always covers, so the build makes progress whatever the bounds are. Finite
+  ranges take the measured midpoint heuristic as before.
 
 ## [0.1.0] — 2026-08-08
 

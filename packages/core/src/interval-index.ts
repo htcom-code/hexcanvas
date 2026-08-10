@@ -32,12 +32,16 @@ interface Node<T extends Interval> {
  *
  * Rebuilt whole rather than mutated: decorations arrive in bulk and are queried
  * once per row per frame, so the cost belongs on the write.
+ *
+ * Ranges that cover no byte are not indexed. A parser produces them — a zero-length
+ * record is a fact about the file, not a mistake — and they would otherwise be carried
+ * through a tree that can never answer with them.
  */
 export class IntervalIndex<T extends Interval> {
   private readonly root: Node<T> | undefined;
 
   constructor(items: readonly T[]) {
-    this.root = build([...items]);
+    this.root = build(items.filter(coversAByte));
   }
 
   /** Ranges overlapping `[from, to)`, in no particular order. */
@@ -53,12 +57,22 @@ export class IntervalIndex<T extends Interval> {
   }
 }
 
+/**
+ * Whether a range covers a byte at all. `end > start` is the whole test: it excludes
+ * the empty range, the inverted one, and a bound that is not a number, none of which a
+ * half-open query can ever overlap — so leaving them out changes no answer, and
+ * `IntervalColumns` and `DecorationStore.map` already treat them the same way.
+ *
+ * It is also what makes `build` terminate. `here` asks for `start <= centre < end`,
+ * which an empty range cannot satisfy at any centre: it goes to a child every time, and
+ * alone in a list it splits into itself for ever. One such range used to cost the whole
+ * index a stack overflow at construction.
+ */
+const coversAByte = <T extends Interval>(item: T): boolean => item.end > item.start;
+
 function build<T extends Interval>(items: T[]): Node<T> | undefined {
   if (items.length === 0) return undefined;
-  // The median of the midpoints, so a run of ranges in one place does not tip
-  // every level to one side.
-  const midpoints = items.map((item) => (item.start + item.end) / 2).sort((left, right) => left - right);
-  const center = midpoints[midpoints.length >> 1]!;
+  const center = centerOf(items);
   const left: T[] = [];
   const right: T[] = [];
   const here: T[] = [];
@@ -79,6 +93,26 @@ function build<T extends Interval>(items: T[]): Node<T> | undefined {
     right: build(right),
   };
 }
+
+/**
+ * The median of the midpoints, so a run of ranges in one place does not tip every level
+ * to one side.
+ *
+ * A range reaching to infinity has no midpoint to offer, and a centre that is not finite
+ * sits inside nothing: every range would be handed to one child and the build would
+ * recurse on the same list for ever. The median start is the fallback, because a range
+ * covers its own start — so whichever range the median picks stays here, and both
+ * children come out strictly smaller. Finite ranges never reach it.
+ */
+function centerOf<T extends Interval>(items: T[]): number {
+  const midpoints = items.map((item) => (item.start + item.end) / 2).sort(ascending);
+  const center = midpoints[midpoints.length >> 1]!;
+  if (Number.isFinite(center)) return center;
+  const starts = items.map((item) => item.start).sort(ascending);
+  return starts[starts.length >> 1]!;
+}
+
+const ascending = (left: number, right: number): number => left - right;
 
 const sortByStart = <T extends Interval>(items: T[]): T[] => [...items].sort((left, right) => left.start - right.start);
 const sortByEnd = <T extends Interval>(items: T[]): T[] => [...items].sort((left, right) => right.end - left.end);
