@@ -153,8 +153,7 @@ so a change that makes one of them wrong has to say what replaced it — otherwi
 next reader trusts a comment that is no longer true.
 
 **An entry in `CHANGELOG.md`** under `[Unreleased]` if the change is one a consumer would
-notice. `0.1.0-next.0` is published, so there is a released version to describe changes
-against.
+notice. `0.1.0` is released, so there is a stable version to describe changes against.
 
 ## Releasing
 

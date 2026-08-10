@@ -5,9 +5,13 @@ import { IntervalIndex, type Interval } from "../src/interval-index";
 const range = (start: number, end: number): Interval => ({ start, end });
 const starts = (found: Interval[]) => found.map((item) => item.start).sort((left, right) => left - right);
 
-/** The answer a full pass would give, which the index has to match exactly. */
+/**
+ * The answer a full pass would give, which the index has to match exactly. The pair of
+ * comparisons is the usual overlap test but it only holds for a range that covers a
+ * byte: an empty range sitting inside the query passes both and intersects nothing.
+ */
 const byScan = (items: Interval[], from: number, to: number) =>
-  starts(items.filter((item) => item.start < to && item.end > from));
+  starts(items.filter((item) => item.end > item.start && item.start < to && item.end > from));
 
 describe("IntervalIndex", () => {
   it("finds what overlaps a range and nothing else", () => {
@@ -40,13 +44,53 @@ describe("IntervalIndex", () => {
     expect(starts(index.covering(95))).toEqual([0]);
   });
 
+  it("leaves out a range that covers no byte", () => {
+    // A zero-length range cannot satisfy `start <= centre < end` at any centre, so the
+    // build used to hand it to a child at every level and, alone in a list, split it
+    // into itself until the stack ran out. One of them cost a consumer the whole index.
+    const empty = range(10, 10);
+    expect(new IntervalIndex([empty]).covering(10)).toEqual([]);
+    expect(new IntervalIndex([empty]).overlapping(0, 100)).toEqual([]);
+
+    // Wherever it sits among ranges that do cover bytes, and however many there are.
+    const among: Interval[] = [range(0, 100), empty, range(20, 24), range(96, 400)];
+    expect(starts(new IntervalIndex(among).overlapping(0, 500))).toEqual([0, 20, 96]);
+    expect(starts(new IntervalIndex(among).covering(10))).toEqual([0]);
+
+    // The shape that found this: a 0-byte record's payload inside a parsed file.
+    const parsed = [range(0, 5309808), range(5309808, 5309816), range(5309808, 5309808)];
+    expect(starts(new IntervalIndex(parsed).covering(5309808))).toEqual([5309808]);
+  });
+
+  it("leaves out a range whose bounds are not ordered numbers", () => {
+    // Inverted and not-a-number fail `end > start` the same way an empty range does, and
+    // a full pass drops them too — `end > from` is false for NaN.
+    expect(new IntervalIndex([range(20, 10)]).overlapping(0, 100)).toEqual([]);
+    expect(new IntervalIndex([range(0, Number.NaN)]).overlapping(0, 100)).toEqual([]);
+    expect(new IntervalIndex([range(Number.NaN, 10)]).overlapping(0, 100)).toEqual([]);
+  });
+
+  it("indexes a range that reaches to infinity rather than dropping it", () => {
+    // It covers bytes, so it belongs in the answer. Its midpoint is not finite, though,
+    // and a centre of `Infinity` puts every range in one child — which is the same
+    // non-terminating split by another route, so the centre falls back to a median start.
+    const items = [range(0, Number.POSITIVE_INFINITY), range(10, 20)];
+    const index = new IntervalIndex(items);
+    expect(starts(index.covering(5))).toEqual([0]);
+    expect(starts(index.covering(15))).toEqual([0, 10]);
+    expect(starts(index.covering(1e12))).toEqual([0]);
+  });
+
   it("agrees with a full pass over awkward data", () => {
     // A document-spanning outer range plus clusters, which is what a parsed
-    // structure looks like and what the naive index gets wrong.
+    // structure looks like and what the naive index gets wrong. Every cluster carries a
+    // zero-length range as well, because a parse result carries them and the fuzz that
+    // missed the hang above could not produce one.
     const items: Interval[] = [range(0, 4096)];
     for (let cluster = 0; cluster < 40; cluster++) {
       const base = cluster * 100;
       items.push(range(base, base + 64), range(base + 8, base + 16), range(base + 8, base + 9));
+      items.push(range(base + 32, base + 32), range(base + 64, base + 64));
     }
     const index = new IntervalIndex(items);
     for (let from = 0; from < 4200; from += 7) {
@@ -83,13 +127,13 @@ describe("IntervalColumns", () => {
     for (let cluster = 0; cluster < 40; cluster++) {
       const base = cluster * 100;
       items.push(range(base, base + 64), range(base + 8, base + 16), range(base + 8, base + 9));
+      items.push(range(base + 32, base + 32), range(base + 64, base + 64));
     }
     for (let sibling = 0; sibling < 200; sibling++) items.push(range(5000 + sibling * 16, 5000 + sibling * 16 + 12));
 
     for (let from = 0; from < 8400; from += 13) {
       const to = from + (from % 3 === 0 ? 1 : 16);
-      const expected = starts(items.filter((item) => item.start < to && item.end > from));
-      expect(found(items, from, to), `overlapping(${from}, ${to})`).toEqual(expected);
+      expect(found(items, from, to), `overlapping(${from}, ${to})`).toEqual(byScan(items, from, to));
     }
   });
 
@@ -105,6 +149,15 @@ describe("IntervalColumns", () => {
     const items = [range(0, 1000), range(400, 600)];
     expect(found(items, 500, 501)).toEqual([0, 400]);
     expect(found(items, 0, 1000)).toEqual([0, 400]);
+  });
+
+  it("answers without a range that covers no byte, as the tree does", () => {
+    // The store's index reaches this case by construction, and both indexes have to give
+    // the same answer for the same ranges or a host cannot swap one for the other.
+    const items = [range(0, 200), range(100, 100), range(150, 160)];
+    expect(found(items, 100, 101)).toEqual([0]);
+    expect(found(items, 99, 102)).toEqual([0]);
+    expect(found(items, 0, 200)).toEqual([0, 150]);
   });
 
   it("reuses the array it is handed", () => {

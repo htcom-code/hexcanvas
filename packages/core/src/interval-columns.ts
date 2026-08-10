@@ -52,7 +52,10 @@ export class IntervalColumns {
   private collect(node: number, low: number, high: number, from: number, limit: number, out: number[]): void {
     if (low >= limit || this.tree[node]! <= from) return;
     if (high - low === 1) {
-      out.push(low);
+      // A range covering no byte overlaps nothing, but the two bounds this walk checks
+      // are met when the query contains it — `start` before `to`, `end` after `from` —
+      // so it has to be excluded here rather than left to them.
+      if (this.ends[low]! > this.starts[low]!) out.push(low);
       return;
     }
     const middle = (low + high) >> 1;
