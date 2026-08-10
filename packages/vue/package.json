@@ -1,6 +1,6 @@
 {
   "name": "@hexcanvas/vue",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Vue binding for HexCanvas, wrapping the <hexcanvas-editor> custom element.",
   "keywords": [
     "hex",
