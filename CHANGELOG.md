@@ -9,6 +9,10 @@ version lines would multiply into combinations nobody tests.
 
 ## [Unreleased]
 
+Nothing since 0.1.1.
+
+## [0.1.1] — 2026-08-10
+
 ### Fixed
 
 - **A range covering no byte no longer breaks the decoration indexes.** One zero-length
@@ -116,6 +120,7 @@ things a consumer would have met and no test could see.
   zero; the rest is down to 132, with the remainder being platform callbacks and button
   labels where a comment would restate the name.
 
-[Unreleased]: https://github.com/htcom-code/hexcanvas/compare/v0.1.0...main
+[Unreleased]: https://github.com/htcom-code/hexcanvas/compare/v0.1.1...main
+[0.1.1]: https://github.com/htcom-code/hexcanvas/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/htcom-code/hexcanvas/compare/v0.1.0-next.0...v0.1.0
 [0.1.0-next.0]: https://github.com/htcom-code/hexcanvas/releases/tag/v0.1.0-next.0

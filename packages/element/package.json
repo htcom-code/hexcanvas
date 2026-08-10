@@ -1,6 +1,6 @@
 {
   "name": "@hexcanvas/element",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "<hexcanvas-editor> custom element: a hex viewer and editor usable from any framework.",
   "keywords": [
     "hex",
