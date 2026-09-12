@@ -20,7 +20,7 @@
     "@microsoft/api-extractor": "^7.59.0",
     "@types/node": "^26.4.1",
     "@types/react": "^19.2.18",
-    "@types/react-dom": "^19.2.5",
+    "@types/react-dom": "^19.2.7",
     "@vitest/browser": "^4.1.11",
     "@vitest/browser-playwright": "^4.1.11",
     "playwright": "^1.62.1",
