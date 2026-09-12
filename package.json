@@ -17,8 +17,8 @@
     "api:docs": "pnpm --filter @hexcanvas/docs-tools exec typedoc --options typedoc.json"
   },
   "devDependencies": {
-    "@microsoft/api-extractor": "^7.59.0",
-    "@types/node": "^26.4.1",
+    "@microsoft/api-extractor": "^7.59.1",
+    "@types/node": "^26.5.0",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.5",
     "@vitest/browser": "^4.1.11",
