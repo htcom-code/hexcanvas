@@ -96,7 +96,7 @@ jobs:
   browser:
     runs-on: ubuntu-latest
     container:
-      image: mcr.microsoft.com/playwright:v1.62.1-noble
+      image: mcr.microsoft.com/playwright:v1.63.0-noble
     env:
       PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
       # Firefox refuses to start as root when $HOME belongs to someone else, and a

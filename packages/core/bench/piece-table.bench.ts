@@ -1,4 +1,4 @@
-import { bench, describe } from "vitest";
+import { test } from "vitest";
 import { ChangeSet } from "../src/byte-source";
 import { PieceTableSource } from "../src/piece-table";
 
@@ -38,20 +38,20 @@ function typed(source: PieceTableSource, edits: number, at = 4096): void {
 const bounded = { iterations: 200, time: 0, warmupIterations: 0, warmupTime: 0 } as const;
 
 for (const pieces of [1_000, 10_000, 50_000]) {
-  describe(`one insert into ~${pieces} pieces`, () => {
+  test(`one insert into ~${pieces} pieces`, async ({ bench }) => {
     const source = new PieceTableSource(document(1 << 20));
     fragment(source, pieces);
     const byte = Uint8Array.of(0x2a);
     let step = 0;
 
-    bench("insert", () => {
+    await bench("insert", () => {
       step += 7919;
       source.apply(ChangeSet.insert(step % source.length, byte));
-    }, bounded);
+    }).run(bounded);
   });
 }
 
-describe("reading a viewport", () => {
+test("reading a viewport", async ({ bench }) => {
   const fresh = new PieceTableSource(document(1 << 20));
   const written = new PieceTableSource(document(1 << 20));
   typed(written, 20_000);
@@ -65,12 +65,14 @@ describe("reading a viewport", () => {
   // What the renderer does every frame, and the reason `collect` is a plain
   // function: as a recursive generator this cost the depth of the tree per row,
   // which made the scattered case ten times the unedited one.
-  bench("40 rows, one piece", () => readFrame(fresh));
-  bench(`40 rows after typing 20,000 bytes, ${written.pieceCount} pieces`, () => readFrame(written));
-  bench(`40 rows, ${broken.pieceCount} pieces`, () => readFrame(broken));
+  await bench.compare(
+    bench("40 rows, one piece", () => readFrame(fresh)),
+    bench(`40 rows after typing 20,000 bytes, ${written.pieceCount} pieces`, () => readFrame(written)),
+    bench(`40 rows, ${broken.pieceCount} pieces`, () => readFrame(broken)),
+  );
 });
 
-describe("one call for the viewport instead of forty", () => {
+test("one call for the viewport instead of forty", async ({ bench }) => {
   const broken = new PieceTableSource(document(1 << 20));
   fragment(broken, 20_000);
   const row = new Uint8Array(16);
@@ -78,30 +80,32 @@ describe("one call for the viewport instead of forty", () => {
 
   // Why the renderer reads the whole window: the per-call overhead outweighs the
   // walk. This is the same 640 bytes both ways, over the same document.
-  bench("40 x peek(16)", () => {
-    for (let index = 0; index < 40; index++) broken.peek(index * 16, 16, row);
-  });
-  bench("1 x peek(640)", () => {
-    broken.peek(0, 640, window);
-  });
+  await bench.compare(
+    bench("40 x peek(16)", () => {
+      for (let index = 0; index < 40; index++) broken.peek(index * 16, 16, row);
+    }),
+    bench("1 x peek(640)", () => {
+      broken.peek(0, 640, window);
+    }),
+  );
 });
 
-describe("typing a run of bytes", () => {
+test("typing a run of bytes", async ({ bench }) => {
   // Coalescing is what keeps this from leaving a piece per keystroke.
-  bench("2,000 keystrokes", () => {
+  await bench("2,000 keystrokes", () => {
     const source = new PieceTableSource(document(1 << 16));
     typed(source, 2_000);
     if (source.pieceCount > 8) throw new Error(`typing left ${source.pieceCount} pieces`);
-  });
+  }).run();
 });
 
-describe("overwriting in place", () => {
+test("overwriting in place", async ({ bench }) => {
   const source = new PieceTableSource(document(1 << 20));
   let at = 0;
 
   // The common edit: same length, so it splits nothing and joins nothing.
-  bench("one byte", () => {
+  await bench("one byte", () => {
     at = (at + 4099) % (source.length - 1);
     source.apply(ChangeSet.replace(at, at + 1, Uint8Array.of(0x33)));
-  });
+  }).run();
 });

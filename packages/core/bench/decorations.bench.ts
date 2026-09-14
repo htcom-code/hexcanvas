@@ -1,4 +1,4 @@
-import { bench, describe } from "vitest";
+import { test } from "vitest";
 import { DecorationStore, type DecorationInput } from "../src/decorations";
 import { IntervalIndex } from "../src/interval-index";
 
@@ -38,54 +38,57 @@ const linear = (items: readonly { start: number; end: number }[]) => ({
 });
 
 for (const records of [64, 1_024, 8_192]) {
-  describe(`a frame over ${records * 5 + 1} ranges`, () => {
+  test(`a frame over ${records * 5 + 1} ranges`, async ({ bench }) => {
     const items = structure(records);
     const store = new DecorationStore();
     store.addAll(items);
     const scan = linear(store.all);
     const middle = (records / 2) * 64;
 
-    bench("indexed", () => {
-      frame(store, middle);
-    });
-
-    bench("full pass", () => {
-      frame(scan, middle);
-    });
+    await bench.compare(
+      bench("indexed", () => {
+        frame(store, middle);
+      }),
+      bench("full pass", () => {
+        frame(scan, middle);
+      }),
+    );
   });
 }
 
-describe("taking a parse result in", () => {
+test("taking a parse result in", async ({ bench }) => {
   const items = structure(8_192); // 40,961 ranges
 
   // What a whole-file parser's result costs to hand over. Columns rather than an
   // object each is what makes this worth doing at all: as objects a range cost
   // about 350 bytes, so a few million were out of reach.
-  bench("40,961 ranges, one call", () => {
-    const store = new DecorationStore();
-    store.replace(items, "structure");
-    store.between(0, 16);
-  });
-
-  bench("40,961 ranges, then a frame", () => {
-    const store = new DecorationStore();
-    store.replace(items, "structure");
-    frame(store, 0);
-  });
+  await bench.compare(
+    bench("40,961 ranges, one call", () => {
+      const store = new DecorationStore();
+      store.replace(items, "structure");
+      store.between(0, 16);
+    }),
+    bench("40,961 ranges, then a frame", () => {
+      const store = new DecorationStore();
+      store.replace(items, "structure");
+      frame(store, 0);
+    }),
+  );
 });
 
-describe("building the index", () => {
+test("building the index", async ({ bench }) => {
   const items = structure(8_192).map((item, index) => ({ ...item, id: `d${index}` }));
 
   // Paid once per write, which is where the cost belongs: decorations arrive in
   // bulk and are read once per row per frame.
-  bench("index 40,961 ranges", () => {
-    new IntervalIndex(items as { start: number; end: number }[]);
-  });
-
-  bench("store them and query once", () => {
-    const store = new DecorationStore();
-    store.addAll(items);
-    store.between(0, 16);
-  });
+  await bench.compare(
+    bench("index 40,961 ranges", () => {
+      new IntervalIndex(items as { start: number; end: number }[]);
+    }),
+    bench("store them and query once", () => {
+      const store = new DecorationStore();
+      store.addAll(items);
+      store.between(0, 16);
+    }),
+  );
 });

@@ -1,4 +1,4 @@
-import { bench, describe } from "vitest";
+import { test } from "vitest";
 import { MemoryByteSource } from "../src/byte-source";
 import { compareAligned } from "../src/diff";
 import { compareAnchored } from "../src/anchored-diff";
@@ -20,9 +20,11 @@ const left = new MemoryByteSource(original);
 const oneByteApart = new MemoryByteSource(changed);
 const shiftedByOne = new MemoryByteSource(shifted);
 
-describe("1 MiB, one byte changed", () => {
-  bench("edit script", async () => { await compareEditScript(left, oneByteApart); });
-  bench("aligned", async () => { await compareAligned(left, oneByteApart); });
+test("1 MiB, one byte changed", async ({ bench }) => {
+  await bench.compare(
+    bench("edit script", async () => { await compareEditScript(left, oneByteApart); }),
+    bench("aligned", async () => { await compareAligned(left, oneByteApart); }),
+  );
 });
 
 /**
@@ -30,16 +32,18 @@ describe("1 MiB, one byte changed", () => {
  * what the edit script calls one insertion, so this is not a like-for-like race
  * — it is what the extra cost buys.
  */
-describe("1 MiB, one byte inserted at the front", () => {
-  bench("edit script", async () => { await compareEditScript(left, shiftedByOne); });
-  bench("aligned", async () => { await compareAligned(left, shiftedByOne); });
+test("1 MiB, one byte inserted at the front", async ({ bench }) => {
+  await bench.compare(
+    bench("edit script", async () => { await compareEditScript(left, shiftedByOne); }),
+    bench("aligned", async () => { await compareAligned(left, shiftedByOne); }),
+  );
 });
 
 /**
  * The pair neither of the others is for: too large to hold, and shifted. The
  * aligned comparison answers it wrongly-but-fast; anchoring answers it.
  */
-describe("8 MiB, one byte inserted at the front", () => {
+test("8 MiB, one byte inserted at the front", async ({ bench }) => {
   const big = new Uint8Array(8 * 1024 * 1024);
   for (let at = 0; at < big.length; at++) big[at] = (at * 31) & 0xff;
   const grown = new Uint8Array(big.length + 1);
@@ -48,6 +52,8 @@ describe("8 MiB, one byte inserted at the front", () => {
   const from = new MemoryByteSource(big);
   const to = new MemoryByteSource(grown);
 
-  bench("anchored", async () => { await compareAnchored(from, to); });
-  bench("aligned", async () => { await compareAligned(from, to); });
+  await bench.compare(
+    bench("anchored", async () => { await compareAnchored(from, to); }),
+    bench("aligned", async () => { await compareAligned(from, to); }),
+  );
 });

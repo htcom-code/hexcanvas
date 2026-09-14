@@ -1,4 +1,4 @@
-import { bench, describe } from "vitest";
+import { test } from "vitest";
 import { MemoryByteSource, PagedByteSource, type ByteSource } from "../src/byte-source";
 import { findNext } from "../src/search";
 
@@ -24,20 +24,20 @@ const delayed = (pageSize: number): ByteSource => new PagedByteSource({
   }),
 });
 
-describe("scanning to the end of 16 MB", () => {
+test("scanning to the end of 16 MB", async ({ bench }) => {
   const resident = new MemoryByteSource(data);
 
-  // The ceiling: no reads to wait for, so this is the matching loop alone.
-  bench("resident", async () => {
-    await findNext(resident, needle, 0);
-  });
-
-  bench("64 KiB pages, 1ms each", async () => {
-    await findNext(delayed(64 * 1024), needle, 0);
-  });
-
-  // What it cost before reading ahead: one window requested, then awaited.
-  bench("64 KiB pages, 1ms each, no read-ahead", async () => {
-    await findNext(delayed(64 * 1024), needle, 0, { chunkSize: 64 * 1024, readAhead: 0 });
-  });
+  await bench.compare(
+    // The ceiling: no reads to wait for, so this is the matching loop alone.
+    bench("resident", async () => {
+      await findNext(resident, needle, 0);
+    }),
+    bench("64 KiB pages, 1ms each", async () => {
+      await findNext(delayed(64 * 1024), needle, 0);
+    }),
+    // What it cost before reading ahead: one window requested, then awaited.
+    bench("64 KiB pages, 1ms each, no read-ahead", async () => {
+      await findNext(delayed(64 * 1024), needle, 0, { chunkSize: 64 * 1024, readAhead: 0 });
+    }),
+  );
 });
