@@ -28,8 +28,9 @@ anything.
 
 ## Supported versions
 
-Nothing is published yet. Once it is, the current minor line receives fixes; older lines
-do not, unless the finding is severe and the upgrade path is not.
+The current minor line receives fixes; older lines do not, unless the finding is severe
+and the upgrade path is not. Below 1.0.0 the minor is the breaking position, so an older
+line is not a supported place to stay — it is where a consumer has not moved yet.
 
 ## What is in scope
 

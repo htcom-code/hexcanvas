@@ -51,6 +51,10 @@ There is no stylesheet to import. Appearance reads `--hexcanvas-*` custom proper
 anywhere above the editor, and the chrome — living in a shadow root — is restyled through
 `::part()`.
 
+The element adopts those styles as a constructed `CSSStyleSheet` rather than appending a
+`<style>`, so an app with a strict `style-src` needs no nonce and no hash. From 0.2.0 that
+sets the browser floor: Chrome 73, Firefox 101 and Safari 16.4.
+
 ```css
 hexcanvas-editor { --hexcanvas-bg: #fff; --hexcanvas-selection: #bcd9ff; }
 hexcanvas-editor::part(panel) { border-radius: 0; }

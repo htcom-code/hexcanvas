@@ -63,10 +63,16 @@ being the cap.
 
 ## Styling
 
-There is no stylesheet to import. Structural styles are inline because overriding them breaks
-the editor; everything that is appearance reads a `--hexcanvas-*` custom property with a
-built-in fallback, declared anywhere above the editor. Custom properties cross shadow
-boundaries, which is why the painted grid can follow the same variables as the DOM chrome.
+There is no stylesheet to import. Structural styles live in the shadow root because
+overriding them breaks the editor; everything that is appearance reads a `--hexcanvas-*`
+custom property with a built-in fallback, declared anywhere above the editor. Custom
+properties cross shadow boundaries, which is why the painted grid can follow the same
+variables as the DOM chrome.
+
+Those styles are adopted as a constructed `CSSStyleSheet` rather than appended as a
+`<style>` element, so **an app with a strict `style-src` needs no nonce and no hash** —
+there is no style element for the policy to apply to. That is also the browser floor:
+Chrome 73, Firefox 101 and Safari 16.4, from 0.2.0 onwards.
 
 ```css
 hexcanvas-editor { --hexcanvas-bg: #fff; --hexcanvas-selection: #bcd9ff; }
