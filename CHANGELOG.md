@@ -9,6 +9,19 @@ version lines would multiply into combinations nobody tests.
 
 ## [Unreleased]
 
+Nothing since 0.2.0.
+
+## [0.2.0] — 2026-09-20
+
+### Changed
+
+- **The floor for running the packages is now Chrome 73, Firefox 101 or Safari 16.4.**
+  This is the minor rather than a patch because of it: the fix below replaces the
+  `<style>` element in each shadow root with a constructed `CSSStyleSheet`, and a browser
+  without `adoptedStyleSheets` adopts nothing at all. Below 1.0.0 the minor is the
+  breaking position, so `^0.1.1` does not carry anyone across this — a consumer pinned
+  there stays on 0.1.1 until they choose to move.
+
 ### Fixed
 
 - **The elements have a layout again under a nonce-based `style-src`.** Shadow styles went
@@ -19,8 +32,7 @@ version lines would multiply into combinations nobody tests.
   nothing at all. Measured at 8 kB of content in a 288px pane, the canvas bitmap went from
   576px to 23,200px. All three elements now adopt a constructed `CSSStyleSheet`, which
   `style-src` has no say over, so a consumer needs neither a nonce nor a hash; one sheet
-  per element is shared by every instance of it rather than parsed per mount. The floor
-  for running the packages is now Chrome 73, Firefox 101 or Safari 16.4. ([#35])
+  per element is shared by every instance of it rather than parsed per mount. ([#35])
 
 [#35]: https://github.com/htcom-code/hexcanvas/issues/35
 
@@ -133,7 +145,8 @@ things a consumer would have met and no test could see.
   zero; the rest is down to 132, with the remainder being platform callbacks and button
   labels where a comment would restate the name.
 
-[Unreleased]: https://github.com/htcom-code/hexcanvas/compare/v0.1.1...main
+[Unreleased]: https://github.com/htcom-code/hexcanvas/compare/v0.2.0...main
+[0.2.0]: https://github.com/htcom-code/hexcanvas/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/htcom-code/hexcanvas/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/htcom-code/hexcanvas/compare/v0.1.0-next.0...v0.1.0
 [0.1.0-next.0]: https://github.com/htcom-code/hexcanvas/releases/tag/v0.1.0-next.0
