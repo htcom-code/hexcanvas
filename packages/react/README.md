@@ -66,6 +66,10 @@ There is no stylesheet to import, and the chrome lives in a shadow root, so `::p
 you restyle it. Appearance reads `--hexcanvas-*` custom properties declared anywhere above the
 editor, and both the DOM chrome and the painted grid follow them.
 
+The element adopts those styles as a constructed `CSSStyleSheet` rather than appending a
+`<style>`, so an app with a strict `style-src` needs no nonce and no hash. From 0.2.0 that
+sets the browser floor: Chrome 73, Firefox 101 and Safari 16.4.
+
 ```css
 .my-editor { --hexcanvas-bg: #fff; --hexcanvas-selection: #bcd9ff; }
 .my-editor::part(panel) { border-radius: 0; }

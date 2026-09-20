@@ -70,9 +70,11 @@ the cursor.*
 npm install @hexcanvas/core @hexcanvas/element   # or pnpm add / yarn add
 ```
 
-> **0.1.x is an early line, not a settled API.** The version says so: below 1.0.0 the
-> minor is the breaking position, so `^0.1.1` will not carry you across a change of
-> shape. The decoration surface changed twice in a single session before this was public.
+> **0.2.x is an early line, not a settled API.** The version says so: below 1.0.0 the
+> minor is the breaking position, so `^0.2.0` will not carry you across a change of
+> shape — 0.2.0 is one of those: it raised the browser floor, and `^0.1.1` does not
+> reach it. The decoration surface changed twice in a single session before this was
+> public.
 > [ROADMAP.md](ROADMAP.md) says which parts are deliberately unfinished.
 
 <details open>
