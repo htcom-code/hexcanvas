@@ -160,8 +160,11 @@ can drift from another. A binding is a forwarding layer, not a second implementa
 <a id="requirements"></a>
 ### Requirements
 
-Node ≥ 22 to build; any browser with `<canvas>` and custom elements to run. ESM only —
-there is no CommonJS build, so `require()` fails with a clear error rather than half-working.
+Node ≥ 22 to build. Chrome 73, Firefox 101 or Safari 16.4 and up to run: the floor is
+constructed stylesheets, which the elements adopt so that a strict `style-src` has nothing
+to block — there is no `<style>` element in the shadow root and no nonce to route through.
+ESM only — there is no CommonJS build, so `require()` fails with a clear error rather than
+half-working.
 
 <a id="typescript"></a>Types ship with every package; no `@types/*` to install.
 
