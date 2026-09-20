@@ -1,4 +1,5 @@
 import type { CommandId, HexEngine, HexText, SearchMode } from "@hexcanvas/core";
+import { sharedStyleSheet } from "./stylesheet.js";
 
 /**
  * One panel, not three. Find, replace and go-to were separate floating forms
@@ -106,8 +107,7 @@ export class HexCanvasFinder extends HTMLElement {
   constructor() {
     super();
     this.root = this.attachShadow({ mode: "open" });
-    const style = document.createElement("style");
-    style.textContent = styles;
+    this.root.adoptedStyleSheets = [sharedStyleSheet(styles)];
 
     this.modeSelect = select();
     this.findInput = input("find-input");
@@ -176,7 +176,7 @@ export class HexCanvasFinder extends HTMLElement {
     const rows = document.createElement("div");
     rows.className = "rows";
     rows.append(this.findRow, this.replaceRow, this.gotoRow, this.message);
-    this.root.append(style, rows);
+    this.root.append(rows);
   }
 
   /** The editor's engine. Re-assigning moves this view to the new one. */

@@ -9,7 +9,20 @@ version lines would multiply into combinations nobody tests.
 
 ## [Unreleased]
 
-Nothing since 0.1.1.
+### Fixed
+
+- **The elements have a layout again under a nonce-based `style-src`.** Shadow styles went
+  in as a `<style>` element with no nonce, so a policy without `'unsafe-inline'` blocked
+  the sheet — and `:host` is in it. The element lost `display: flex` and its declared
+  height, the viewport stopped being a flex item and grew to the document-tall scroll
+  spacer, and the canvas followed it past Chromium's 65,535px limit, past which it paints
+  nothing at all. Measured at 8 kB of content in a 288px pane, the canvas bitmap went from
+  576px to 23,200px. All three elements now adopt a constructed `CSSStyleSheet`, which
+  `style-src` has no say over, so a consumer needs neither a nonce nor a hash; one sheet
+  per element is shared by every instance of it rather than parsed per mount. The floor
+  for running the packages is now Chrome 73, Firefox 101 or Safari 16.4. ([#35])
+
+[#35]: https://github.com/htcom-code/hexcanvas/issues/35
 
 ## [0.1.1] — 2026-08-10
 

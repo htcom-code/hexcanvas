@@ -13,6 +13,7 @@ import {
   type SearchProvider,
 } from "@hexcanvas/core";
 import { defineHexCanvasElement, HexCanvasElement } from "./hexcanvas-element.js";
+import { sharedStyleSheet } from "./stylesheet.js";
 
 /**
  * Two editors side by side rather than one editor that knows about two
@@ -158,8 +159,7 @@ export class HexCanvasCompare extends HTMLElement {
     // rather than handing back two inert boxes that gain an engine later.
     defineHexCanvasElement();
     this.root = this.attachShadow({ mode: "open" });
-    const style = document.createElement("style");
-    style.textContent = styles;
+    this.root.adoptedStyleSheets = [sharedStyleSheet(styles)];
 
     this.leftEditor = pane("left");
     this.rightEditor = pane("right");
@@ -196,7 +196,7 @@ export class HexCanvasCompare extends HTMLElement {
       this.message,
     );
 
-    this.root.append(style, chrome, this.panes);
+    this.root.append(chrome, this.panes);
 
     this.comparison = new HexCompare({ left: this.leftEditor.engine, right: this.rightEditor.engine });
   }

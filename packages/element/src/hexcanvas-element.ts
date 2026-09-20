@@ -22,6 +22,7 @@ import {
   type SearchProvider,
 } from "@hexcanvas/core";
 import { defineHexCanvasFinder, exportParts, HexCanvasFinder } from "./hexcanvas-finder.js";
+import { sharedStyleSheet } from "./stylesheet.js";
 
 /**
  * Styles live inside the shadow root, so a consumer imports nothing and
@@ -165,8 +166,7 @@ export class HexCanvasElement extends HTMLElement {
     // Open, not closed: hosts and tests need to reach the internals, and
     // ::part() covers the styling that encapsulation would otherwise block.
     this.root = this.attachShadow({ mode: "open" });
-    const style = document.createElement("style");
-    style.textContent = styles;
+    this.root.adoptedStyleSheets = [sharedStyleSheet(styles)];
 
     this.canvas = document.createElement("canvas");
     this.canvas.setAttribute("part", "canvas");
@@ -196,7 +196,7 @@ export class HexCanvasElement extends HTMLElement {
     this.viewport.tabIndex = -1;
     this.viewport.setAttribute("part", "viewport");
     this.viewport.append(this.content);
-    this.root.append(style, this.chrome, this.viewport);
+    this.root.append(this.chrome, this.viewport);
 
     this.engine = new HexEngine({
       source: new EmptySource(),
