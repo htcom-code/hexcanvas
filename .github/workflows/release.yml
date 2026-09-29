@@ -271,9 +271,34 @@ jobs:
           # shorthand `owner/repo` and refuses it: "Refusing to fetch
           # github:tarballs/hexcanvas-core-0.1.0-next.0.tgz". A leading `./` makes it a
           # path again.
+          #
+          # A dry run of a version npm already has is skipped per package rather than
+          # attempted. npm refuses `--dry-run` over a published version exactly as it
+          # refuses the real thing, so between a release and the next version bump every
+          # dry run on main would end red for a reason that is not a fault — and a gate
+          # that is always red stops being read. A tag gets no such allowance: releasing a
+          # version that is already out is the fault, and it should fail.
+          skipped=()
           for tarball in ./tarballs/*.tgz; do
+            if [ "${#dry[@]}" -gt 0 ]; then
+              name=$(tar -xzOf "$tarball" package/package.json | jq -r .name)
+              if [ -n "$(npm view "$name@$version" version 2>/dev/null)" ]; then
+                echo "::notice::$name@$version is already on npm, which refuses even a dry run over it; skipped"
+                skipped+=("$name")
+                continue
+              fi
+            fi
             npm stage publish "$tarball" --access public --provenance "${tag[@]}" "${dry[@]}"
           done
+          if [ "${#skipped[@]}" -gt 0 ]; then
+            {
+              echo "### Dry run: staging skipped for ${#skipped[@]} of 5"
+              echo
+              echo "\`$version\` is already published for: ${skipped[*]}. npm refuses a dry run"
+              echo "over a published version, so staging was not exercised for those. Every"
+              echo "gate before it ran; bump the version to dry-run the staging step itself."
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
       - name: what to do next
         if: success() && !(github.event_name == 'workflow_dispatch' && inputs.dry_run)
         run: |
