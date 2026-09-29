@@ -169,7 +169,7 @@ npm stage approve <stage-id>       # needs 2FA
 npm stage reject  <stage-id>       # frees the version number
 ```
 
-Approve `@hexcanvas/core` **last**. The four bindings depend on it by exact version, so
+Approve `@hexcanvas/core` **first**. The four bindings depend on it by exact version, so
 a window where core is public and they are not is the harmless order; the reverse breaks
 installs.
 
@@ -177,6 +177,16 @@ Rejecting is why this is worth doing: it deletes the staged record and the versi
 becomes available again. Everything before staging proves the artifacts are correct;
 staging is where someone decides whether to release them at all, and it is the only step
 that can be taken back.
+
+The GitHub Release waits beside the stage as a **draft**, made from the version's
+`CHANGELOG.md` section (a tag without one fails before anything is staged). It is
+published by hand once npm has the version, and deleted with the tag if the stage is
+rejected — a public Release would otherwise announce a version that never shipped:
+
+```sh
+gh release edit v<version> --draft=false --latest    # after approval; no --latest for a prerelease
+gh release delete v<version> --yes                   # after a rejection, then delete the tag
+```
 
 `gh workflow run release.yml -f dry_run=true` walks the whole path without staging.
 

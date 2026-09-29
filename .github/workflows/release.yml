@@ -25,8 +25,8 @@ on:
         type: boolean
         default: true
 
-# The default for every job. `stage` raises its own; nothing else needs more than
-# reading the tree.
+# The default for every job. `stage` and `draft` raise their own; nothing else needs
+# more than reading the tree.
 permissions:
   contents: read
 
@@ -73,6 +73,11 @@ jobs:
       # that are only visible inside the archive (a missing README, an unrewritten
       # `workspace:*`, a source map pointing at unpublished src).
       - run: node scripts/check-publish.mjs ${{ steps.version.outputs.version }}
+      # The draft Release that follows a successful stage is this section of the
+      # changelog, so a tag cut without its entry stops here — before anything reaches
+      # npm — rather than after the packages are already staged. The body is printed, so
+      # a dry run shows what the Release would say.
+      - run: node scripts/release-notes.mjs ${{ steps.version.outputs.version }}
 
   # The reference for this version, generated from the sources it was cut from.
   #
@@ -286,7 +291,77 @@ jobs:
           npm stage reject  <stage-id>       # frees the version number
           ```
 
-          Approve `@hexcanvas/core` **last**: the four bindings depend on it by exact
+          Approve `@hexcanvas/core` **first**: the four bindings depend on it by exact
           version, so a window where core is public and they are not is the harmless
           order, and the reverse breaks installs.
+
+          The GitHub Release waits as a draft beside this — see the `draft` job.
+          SUMMARY
+
+  # The GitHub Release for the tag, created as a draft and left for a person to publish.
+  #
+  # Not published here because nothing is released yet: the packages sit in staging until
+  # someone approves them, and a rejected stage frees the version number and the tag with
+  # it. A public Release made now would outlive a rejection and announce a version npm
+  # never had — which is why tags carried no Release at all until this job existed. A
+  # draft is visible only to people who can push, so the one window where the two can
+  # disagree is covered, and publishing it is a single command once npm answers.
+  #
+  # After `stage`, so a failed gate leaves no draft to clean up; tags only, because a
+  # dispatch stages nothing.
+  draft:
+    needs: [verify, stage]
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    permissions:
+      # Creating a Release, and nothing else. Asked for here so no job that runs a build
+      # can write to the repository.
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: draft the release
+        run: |
+          version="${{ needs.verify.outputs.version }}"
+          node scripts/release-notes.mjs "$version" > "$RUNNER_TEMP/notes.md"
+          prerelease=()
+          case "$version" in
+            *-*) prerelease=(--prerelease) ;;
+          esac
+          # A rejected stage followed by the same tag pushed again finds the old draft.
+          # A draft is replaced — it was never seen — but a published Release means this
+          # version already went out, and that is not something to overwrite.
+          if draft=$(gh release view "$GITHUB_REF_NAME" --json isDraft --jq .isDraft 2>/dev/null); then
+            if [ "$draft" != "true" ]; then
+              echo "::error::$GITHUB_REF_NAME already has a published Release"
+              exit 1
+            fi
+            gh release delete "$GITHUB_REF_NAME" --yes
+          fi
+          gh release create "$GITHUB_REF_NAME" --draft --verify-tag \
+            --title "$version" --notes-file "$RUNNER_TEMP/notes.md" "${prerelease[@]}"
+      - name: what to do with it
+        run: |
+          # A prerelease never takes the Latest badge from the stable line.
+          case "${{ needs.verify.outputs.version }}" in
+            *-*) latest="" ;;
+            *)   latest=" --latest" ;;
+          esac
+          cat >> "$GITHUB_STEP_SUMMARY" <<SUMMARY
+          ### Draft Release ${GITHUB_REF_NAME}
+
+          Once all five packages are approved and \`npm view @hexcanvas/core dist-tags\`
+          shows the new version:
+
+          \`\`\`sh
+          gh release edit ${GITHUB_REF_NAME} --draft=false${latest}
+          \`\`\`
+
+          If the stage is rejected instead, take the draft and the tag down with it:
+
+          \`\`\`sh
+          gh release delete ${GITHUB_REF_NAME} --yes
+          git push --delete origin ${GITHUB_REF_NAME}
+          \`\`\`
           SUMMARY
