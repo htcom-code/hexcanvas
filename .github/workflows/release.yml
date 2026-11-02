@@ -127,10 +127,9 @@ jobs:
       HOME: /root
     steps:
       - uses: actions/checkout@v7
-      - name: enable pnpm
-        run: |
-          corepack enable
-          corepack prepare pnpm@11.1.3 --activate
+      - name: install pnpm
+        # See the same step in ci.yml: this image's Node no longer bundles corepack.
+        run: npm install -g pnpm@11.1.3
       - run: pnpm install --frozen-lockfile
       - run: pnpm test:browser
 
