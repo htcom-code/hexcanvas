@@ -48,7 +48,7 @@
     "@hexcanvas/element": "workspace:*"
   },
   "devDependencies": {
-    "vue": "^3.5.44"
+    "vue": "^3.5.45"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
